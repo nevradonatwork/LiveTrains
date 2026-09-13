@@ -7,6 +7,7 @@ const PORT = process.env.PORT || 3000;
 const STATIONS = {
   NEM: 'New Malden',
   WAT: 'London Waterloo',
+  RAY: 'Raynes Park',
 };
 
 app.use(express.static(path.join(__dirname, 'public')));

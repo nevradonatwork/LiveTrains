@@ -4,6 +4,8 @@ const path = require('path');
 const PAIRS = [
   ['NEM', 'WAT'],
   ['WAT', 'NEM'],
+  ['NEM', 'RAY'],
+  ['RAY', 'NEM'],
 ];
 
 const OUT_PATH = path.join(__dirname, '..', 'docs', 'data', 'departures.json');

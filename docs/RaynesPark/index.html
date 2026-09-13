@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LiveTrains &mdash; New Malden ⇄ Waterloo</title>
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
-  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-  <link rel="manifest" href="manifest.webmanifest" />
+  <title>LiveTrains &mdash; New Malden ⇄ Raynes Park</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16.png" />
+  <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
+  <link rel="manifest" href="../manifest.webmanifest" />
   <meta name="theme-color" content="#ffffff" />
-  <link rel="stylesheet" href="style.css?v=6" />
+  <link rel="stylesheet" href="../style.css?v=6" />
 </head>
 <body>
   <div class="app">
@@ -69,13 +69,13 @@
     window.BOARD_CONFIG = {
       stations: {
         NEM: { name: 'New Malden', icon: 'home' },
-        WAT: { name: 'London Waterloo', icon: 'briefcase' },
+        RAY: { name: 'Raynes Park', icon: 'pin' },
       },
       defaultFrom: 'NEM',
-      defaultTo: 'WAT',
-      dataPath: 'data/departures.json',
+      defaultTo: 'RAY',
+      dataPath: '../data/departures.json',
     };
   </script>
-  <script src="assets/board.js?v=1"></script>
+  <script src="../assets/board.js?v=1"></script>
 </body>
 </html>
