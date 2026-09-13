@@ -13,7 +13,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Huxley2 is a free, open-source proxy in front of National Rail's live
 // departure board feed - no API key needed, but it's a community demo
-// with no uptime guarantee, so TransportAPI's sandbox key is a fallback.
+// with no uptime guarantee, so a TransportAPI account is a fallback (set
+// TRANSPORTAPI_APP_ID / TRANSPORTAPI_APP_KEY in the environment, e.g. a
+// local untracked .env file, to enable it).
 async function fetchFromHuxley(from, to) {
   const url = `https://huxley2.azurewebsites.net/departures/${from}/to/${to}?expand=false&numRows=10`;
   const upstream = await fetch(url, {
@@ -47,7 +49,14 @@ async function fetchFromHuxley(from, to) {
 }
 
 async function fetchFromTransportApi(from, to) {
-  const url = `https://transportapi.com/v3/uk/train/station/${from}/live.json?app_id=test&app_key=test&calling_at=${to}&train_status=passenger`;
+  const appId = process.env.TRANSPORTAPI_APP_ID;
+  const appKey = process.env.TRANSPORTAPI_APP_KEY;
+
+  if (!appId || !appKey) {
+    throw new Error('TRANSPORTAPI_APP_ID / TRANSPORTAPI_APP_KEY not set');
+  }
+
+  const url = `https://transportapi.com/v3/uk/train/station/${from}/live.json?app_id=${appId}&app_key=${appKey}&calling_at=${to}&train_status=passenger`;
   const upstream = await fetch(url, { signal: AbortSignal.timeout(10000) });
 
   if (!upstream.ok) {

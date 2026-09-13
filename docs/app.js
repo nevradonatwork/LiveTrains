@@ -49,98 +49,34 @@ function renderStations() {
   routeTitle.textContent = `Showing trains from ${fromStation.name} to ${toStation.name}`;
 }
 
-async function fetchJson(url) {
-  let response;
-
-  try {
-    response = await fetch(url, { headers: { Accept: 'application/json' } });
-  } catch (err) {
-    throw new Error('request failed (offline, DNS, or blocked)');
-  }
-
-  if (!response.ok) {
-    const detail = await response.text().catch(() => '');
-    throw new Error(`server error ${response.status}${detail ? `: ${detail}` : ''}`);
-  }
-
-  return response.json();
-}
-
-// Provider 1: Huxley2, a free CORS-enabled proxy for National Rail's live
-// departure boards. No API key needed, but it's a community demo with no
-// uptime guarantee.
-async function fetchFromHuxley(fromCode, toCode) {
-  const url = `https://huxley2.azurewebsites.net/departures/${fromCode}/to/${toCode}?expand=false&numRows=10`;
-  const data = await fetchJson(url);
-  const trainServices = data.trainServices || [];
-
-  if (!trainServices.length && !data.generatedAt) {
-    // An empty/near-empty body with no timestamp usually means the demo
-    // instance itself is down rather than "no trains right now".
-    throw new Error('empty response');
-  }
-
-  return {
-    generatedAt: data.generatedAt || Date.now(),
-    services: trainServices.map((s) => ({
-      scheduledTime: s.std,
-      expectedTime: s.etd,
-      platform: s.platform || 'TBC',
-      operator: s.operator,
-      destination: (s.destination && s.destination[0] && s.destination[0].locationName) || STATIONS[toCode].name,
-      isCancelled: !!s.isCancelled,
-    })),
-  };
-}
-
-// Provider 2 (fallback): TransportAPI's public sandbox credentials
-// (shared, rate-limited, but keyless to set up). Used only if Huxley2
-// fails or is unreachable.
-async function fetchFromTransportApi(fromCode, toCode) {
-  const url = `https://transportapi.com/v3/uk/train/station/${fromCode}/live.json?app_id=test&app_key=test&calling_at=${toCode}&train_status=passenger`;
-  const data = await fetchJson(url);
-  const all = (data.departures && data.departures.all) || [];
-
-  return {
-    generatedAt: Date.now(),
-    services: all.map((s) => {
-      const status = (s.status || '').toUpperCase();
-      const isCancelled = status === 'CANCELLED';
-      const expected = s.expected_departure_time || s.aimed_departure_time;
-      const onTime = !isCancelled && expected === s.aimed_departure_time;
-
-      return {
-        scheduledTime: s.aimed_departure_time,
-        expectedTime: isCancelled ? 'Cancelled' : onTime ? 'On time' : expected,
-        platform: s.platform || 'TBC',
-        operator: s.operator_name,
-        destination: s.destination_name || STATIONS[toCode].name,
-        isCancelled,
-      };
-    }),
-  };
-}
-
+// The site never calls the live train APIs (or holds their keys) itself.
+// A GitHub Actions workflow fetches departures on a schedule using a
+// repository secret and commits the result here, so the page just reads
+// this same-origin JSON file - no CORS, no exposed credentials.
 async function loadDepartures() {
   renderStations();
   setStatus('Loading…');
 
-  const errors = [];
+  try {
+    const res = await fetch(`data/departures.json?_=${Date.now()}`);
 
-  for (const provider of [fetchFromHuxley, fetchFromTransportApi]) {
-    try {
-      const { generatedAt, services } = await provider(from, to);
-
-      renderBoard(services);
-      lastUpdatedEl.textContent = `Last updated: ${new Date(generatedAt).toLocaleTimeString('en-GB')}`;
-      setStatus(services.length ? '' : 'No scheduled services found right now.');
-      return;
-    } catch (err) {
-      errors.push(err.message);
+    if (!res.ok) {
+      throw new Error(`Could not load data file (${res.status})`);
     }
-  }
 
-  setStatus(`Could not load departures: ${errors.join(' / ')}`, true);
+    const data = await res.json();
+    const route = data.routes && data.routes[`${from}-${to}`];
+    const services = (route && route.services) || [];
+
+    renderBoard(services);
+
+    lastUpdatedEl.textContent = data.generatedAt
+      ? `Last updated: ${new Date(data.generatedAt).toLocaleTimeString('en-GB')}`
+      : 'Waiting for the first data update…';
+    setStatus(services.length ? '' : 'No scheduled services found right now.');
+  } catch (err) {
+    setStatus(`Could not load departures: ${err.message}`, true);
+  }
 }
 
 function renderBoard(services) {
@@ -163,7 +99,7 @@ function renderBoard(services) {
 
 function scheduleAutoRefresh() {
   clearInterval(refreshTimer);
-  refreshTimer = setInterval(loadDepartures, 30000);
+  refreshTimer = setInterval(loadDepartures, 60000);
 }
 
 swapBtn.addEventListener('click', () => {
