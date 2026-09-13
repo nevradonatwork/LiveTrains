@@ -30,7 +30,12 @@ function journeyMinutes(departureTime, arrivalTime) {
   return diff;
 }
 
-async function fetchHuxleyBoard(kind, crs, filterType, filterCrs) {
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// The Huxley2 demo is documented as having "zero guarantees of uptime" and
+// regularly returns transient 5xx errors, so a failed request gets a
+// couple of quick retries before giving up.
+async function fetchHuxleyBoard(kind, crs, filterType, filterCrs, attempt = 1) {
   const url = `https://huxley2.azurewebsites.net/${kind}/${crs}/${filterType}/${filterCrs}?numRows=20`;
   const upstream = await fetch(url, {
     headers: { Accept: 'application/json' },
@@ -38,6 +43,10 @@ async function fetchHuxleyBoard(kind, crs, filterType, filterCrs) {
   });
 
   if (!upstream.ok) {
+    if (upstream.status >= 500 && attempt < 3) {
+      await sleep(1000 * attempt);
+      return fetchHuxleyBoard(kind, crs, filterType, filterCrs, attempt + 1);
+    }
     const detail = await upstream.text().catch(() => '');
     throw new Error(`Huxley2 ${kind} error ${upstream.status}${detail ? `: ${detail}` : ''}`);
   }
