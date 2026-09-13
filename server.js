@@ -23,7 +23,7 @@ app.get('/api/departures/:from/:to', async (req, res) => {
     return res.status(400).json({ error: 'Unknown station code.' });
   }
 
-  const url = `${HUXLEY_BASE}/departures/${from}/to/${to}?expand=false&numRows=10&accessToken=`;
+  const url = `${HUXLEY_BASE}/departures/${from}/to/${to}?expand=false&numRows=10`;
 
   try {
     const upstream = await fetch(url, {

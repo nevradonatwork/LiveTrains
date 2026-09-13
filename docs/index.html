@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -10,12 +10,12 @@
   <div class="app">
     <header>
       <h1 id="route-title">New Malden &rarr; London Waterloo</h1>
-      <p class="subtitle">Canlı tren kalkış tahtası</p>
+      <p class="subtitle">Live train departure board</p>
     </header>
 
     <div class="controls">
-      <button id="toggle-btn" class="toggle-btn">Waterloo &rarr; New Malden trenlerini göster</button>
-      <button id="refresh-btn" class="refresh-btn" title="Yenile">&#8635;</button>
+      <button id="toggle-btn" class="toggle-btn">Show Waterloo &rarr; New Malden trains</button>
+      <button id="refresh-btn" class="refresh-btn" title="Refresh">&#8635;</button>
     </div>
 
     <div id="status" class="status"></div>
@@ -23,11 +23,11 @@
     <table class="board">
       <thead>
         <tr>
-          <th>Saat</th>
-          <th>Tahmini</th>
+          <th>Time</th>
+          <th>Expected</th>
           <th>Platform</th>
-          <th>Varış</th>
-          <th>Operatör</th>
+          <th>Destination</th>
+          <th>Operator</th>
         </tr>
       </thead>
       <tbody id="board-body">
