@@ -16,8 +16,35 @@ app.use(express.static(path.join(__dirname, 'public')));
 // with no uptime guarantee, so a TransportAPI account is a fallback (set
 // TRANSPORTAPI_APP_ID / TRANSPORTAPI_APP_KEY in the environment, e.g. a
 // local untracked .env file, to enable it).
+// Finds the calling point matching `crs` among a service's subsequent
+// calling points (only present when the request used expand=true).
+function findCallingPoint(service, crs) {
+  const lists = service.subsequentCallingPoints || [];
+
+  for (const list of lists) {
+    const match = (list.callingPoint || []).find((p) => p.crs === crs);
+    if (match) return match;
+  }
+
+  return null;
+}
+
+function toMinutesOfDay(time) {
+  const [hours, mins] = time.split(':').map(Number);
+  return hours * 60 + mins;
+}
+
+function journeyMinutes(departureTime, arrivalTime) {
+  if (!departureTime || !arrivalTime) return null;
+
+  let diff = toMinutesOfDay(arrivalTime) - toMinutesOfDay(departureTime);
+  if (diff < 0) diff += 24 * 60; // overnight service
+
+  return diff;
+}
+
 async function fetchFromHuxley(from, to) {
-  const url = `https://huxley2.azurewebsites.net/departures/${from}/to/${to}?expand=false&numRows=20`;
+  const url = `https://huxley2.azurewebsites.net/departures/${from}/to/${to}?expand=true&numRows=20`;
   const upstream = await fetch(url, {
     headers: { Accept: 'application/json' },
     signal: AbortSignal.timeout(10000),
@@ -37,14 +64,18 @@ async function fetchFromHuxley(from, to) {
 
   return {
     generatedAt: data.generatedAt || new Date().toISOString(),
-    services: trainServices.map((s) => ({
-      scheduledTime: s.std,
-      expectedTime: s.etd,
-      platform: s.platform || 'TBC',
-      operator: s.operator,
-      destination: (s.destination && s.destination[0] && s.destination[0].locationName) || STATIONS[to],
-      isCancelled: !!s.isCancelled,
-    })),
+    services: trainServices.map((s) => {
+      const arrival = findCallingPoint(s, to);
+
+      return {
+        scheduledTime: s.std,
+        expectedTime: s.etd,
+        platform: s.platform || 'TBC',
+        operator: s.operator,
+        durationMinutes: arrival ? journeyMinutes(s.std, arrival.st) : null,
+        isCancelled: !!s.isCancelled,
+      };
+    }),
   };
 }
 
@@ -79,7 +110,7 @@ async function fetchFromTransportApi(from, to) {
         expectedTime: isCancelled ? 'Cancelled' : onTime ? 'On time' : expected,
         platform: s.platform || 'TBC',
         operator: s.operator_name,
-        destination: s.destination_name || STATIONS[to],
+        durationMinutes: null, // TransportAPI's live board doesn't expose calling-point arrival times
         isCancelled,
       };
     }),
