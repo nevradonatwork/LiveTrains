@@ -6,6 +6,8 @@ const PAIRS = [
   ['WAT', 'NEM'],
   ['NEM', 'RAY'],
   ['RAY', 'NEM'],
+  ['NEM', 'VXH'],
+  ['VXH', 'NEM'],
 ];
 
 const OUT_PATH = path.join(__dirname, '..', 'docs', 'data', 'departures.json');

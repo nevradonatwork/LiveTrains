@@ -8,6 +8,7 @@ const STATIONS = {
   NEM: 'New Malden',
   WAT: 'London Waterloo',
   RAY: 'Raynes Park',
+  VXH: 'Vauxhall',
 };
 
 app.use(express.static(path.join(__dirname, 'public')));
