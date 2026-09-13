@@ -1,16 +1,17 @@
+// Generic departure-board logic shared by every route page. Each page sets
+// `window.BOARD_CONFIG` (stations, default direction, data file path) in a
+// small inline script before loading this file.
 const ICONS = {
   home: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5 12 4l8 6.5"/><path d="M6 9.5V20h12V9.5"/></svg>',
   briefcase: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7.5" width="18" height="12" rx="2"/><path d="M8 7.5V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1.5"/><path d="M3 13h18"/></svg>',
+  pin: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.5 7-11.5a7 7 0 1 0-14 0C5 14.5 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>',
 };
 
-const STATIONS = {
-  NEM: { name: 'New Malden', icon: 'home' },
-  WAT: { name: 'London Waterloo', icon: 'briefcase' },
-};
+const { stations: STATIONS, defaultFrom, defaultTo, dataPath } = window.BOARD_CONFIG;
 
 // from -> to. Swapping the button flips these two codes.
-let from = 'NEM';
-let to = 'WAT';
+let from = defaultFrom;
+let to = defaultTo;
 let refreshTimer = null;
 
 const boardBody = document.getElementById('board-body');
@@ -63,7 +64,7 @@ async function loadDepartures() {
   setStatus('Loading…');
 
   try {
-    const res = await fetch(`data/departures.json?_=${Date.now()}`);
+    const res = await fetch(`${dataPath}?_=${Date.now()}`);
 
     if (!res.ok) {
       throw new Error(`Could not load data file (${res.status})`);
