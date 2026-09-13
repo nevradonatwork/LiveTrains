@@ -1,16 +1,8 @@
 {
-  "generatedAt": "2026-09-13T18:32:23.002Z",
+  "generatedAt": "2026-09-13T18:42:11.199Z",
   "routes": {
     "NEM-WAT": {
       "services": [
-        {
-          "scheduledTime": "19:40",
-          "expectedTime": "On time",
-          "platform": "TBC",
-          "operator": "South Western Railway",
-          "destination": "London Waterloo",
-          "isCancelled": false
-        },
         {
           "scheduledTime": "19:48",
           "expectedTime": "On time",
@@ -21,7 +13,7 @@
         },
         {
           "scheduledTime": "20:10",
-          "expectedTime": "On time",
+          "expectedTime": "20:09",
           "platform": "TBC",
           "operator": "South Western Railway",
           "destination": "London Waterloo",
@@ -69,6 +61,22 @@
         },
         {
           "scheduledTime": "21:18",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "destination": "London Waterloo",
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "21:40",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "destination": "London Waterloo",
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "21:40",
           "expectedTime": "On time",
           "platform": "TBC",
           "operator": "South Western Railway",
