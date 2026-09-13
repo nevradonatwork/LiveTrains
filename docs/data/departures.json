@@ -1,35 +1,11 @@
 {
-  "generatedAt": "2026-09-13T18:42:11.199Z",
+  "generatedAt": "2026-09-13T19:38:47.911Z",
   "routes": {
     "NEM-WAT": {
       "services": [
         {
-          "scheduledTime": "19:48",
-          "expectedTime": "On time",
-          "platform": "TBC",
-          "operator": "South Western Railway",
-          "destination": "London Waterloo",
-          "isCancelled": false
-        },
-        {
-          "scheduledTime": "20:10",
-          "expectedTime": "20:09",
-          "platform": "TBC",
-          "operator": "South Western Railway",
-          "destination": "London Waterloo",
-          "isCancelled": false
-        },
-        {
-          "scheduledTime": "20:18",
-          "expectedTime": "On time",
-          "platform": "TBC",
-          "operator": "South Western Railway",
-          "destination": "London Waterloo",
-          "isCancelled": false
-        },
-        {
           "scheduledTime": "20:40",
-          "expectedTime": "On time",
+          "expectedTime": "20:39",
           "platform": "TBC",
           "operator": "South Western Railway",
           "destination": "London Waterloo",
@@ -45,7 +21,7 @@
         },
         {
           "scheduledTime": "20:48",
-          "expectedTime": "On time",
+          "expectedTime": "20:49",
           "platform": "TBC",
           "operator": "South Western Railway",
           "destination": "London Waterloo",
@@ -53,7 +29,7 @@
         },
         {
           "scheduledTime": "21:10",
-          "expectedTime": "On time",
+          "expectedTime": "21:11",
           "platform": "TBC",
           "operator": "South Western Railway",
           "destination": "London Waterloo",
@@ -82,51 +58,35 @@
           "operator": "South Western Railway",
           "destination": "London Waterloo",
           "isCancelled": false
+        },
+        {
+          "scheduledTime": "21:48",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "destination": "London Waterloo",
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "22:10",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "destination": "London Waterloo",
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "22:18",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "destination": "London Waterloo",
+          "isCancelled": false
         }
       ]
     },
     "WAT-NEM": {
       "services": [
-        {
-          "scheduledTime": "19:48",
-          "expectedTime": "On time",
-          "platform": "4",
-          "operator": "South Western Railway",
-          "destination": "Shepperton",
-          "isCancelled": false
-        },
-        {
-          "scheduledTime": "19:57",
-          "expectedTime": "On time",
-          "platform": "3",
-          "operator": "South Western Railway",
-          "destination": "Hampton Court",
-          "isCancelled": false
-        },
-        {
-          "scheduledTime": "20:14",
-          "expectedTime": "On time",
-          "platform": "17",
-          "operator": "South Western Railway",
-          "destination": "London Waterloo",
-          "isCancelled": false
-        },
-        {
-          "scheduledTime": "20:18",
-          "expectedTime": "On time",
-          "platform": "3",
-          "operator": "South Western Railway",
-          "destination": "London Waterloo",
-          "isCancelled": false
-        },
-        {
-          "scheduledTime": "20:27",
-          "expectedTime": "On time",
-          "platform": "4",
-          "operator": "South Western Railway",
-          "destination": "Hampton Court",
-          "isCancelled": false
-        },
         {
           "scheduledTime": "20:48",
           "expectedTime": "On time",
@@ -155,6 +115,38 @@
           "scheduledTime": "21:18",
           "expectedTime": "On time",
           "platform": "3",
+          "operator": "South Western Railway",
+          "destination": "London Waterloo",
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "21:48",
+          "expectedTime": "On time",
+          "platform": "1",
+          "operator": "South Western Railway",
+          "destination": "Shepperton",
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "21:57",
+          "expectedTime": "On time",
+          "platform": "5",
+          "operator": "South Western Railway",
+          "destination": "Hampton Court",
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "22:14",
+          "expectedTime": "On time",
+          "platform": "15",
+          "operator": "South Western Railway",
+          "destination": "London Waterloo",
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "22:18",
+          "expectedTime": "On time",
+          "platform": "6",
           "operator": "South Western Railway",
           "destination": "London Waterloo",
           "isCancelled": false
