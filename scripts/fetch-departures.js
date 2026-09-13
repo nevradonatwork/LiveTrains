@@ -86,59 +86,21 @@ async function fetchFromHuxley(from, to) {
   });
 }
 
-async function fetchFromTransportApi(from, to) {
-  const appId = process.env.TRANSPORTAPI_APP_ID;
-  const appKey = process.env.TRANSPORTAPI_APP_KEY;
-
-  if (!appId || !appKey) {
-    throw new Error('TRANSPORTAPI_APP_ID / TRANSPORTAPI_APP_KEY not set');
-  }
-
-  const url = `https://transportapi.com/v3/uk/train/station/${from}/live.json?app_id=${appId}&app_key=${appKey}&calling_at=${to}&train_status=passenger`;
-  const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
-
-  if (!res.ok) {
-    const detail = await res.text().catch(() => '');
-    throw new Error(`TransportAPI error ${res.status}${detail ? `: ${detail}` : ''}`);
-  }
-
-  const data = await res.json();
-  const all = (data.departures && data.departures.all) || [];
-
-  return all.map((s) => {
-    const status = (s.status || '').toUpperCase();
-    const isCancelled = status === 'CANCELLED';
-    const expected = s.expected_departure_time || s.aimed_departure_time;
-    const onTime = !isCancelled && expected === s.aimed_departure_time;
-
-    return {
-      scheduledTime: s.aimed_departure_time,
-      expectedTime: isCancelled ? 'Cancelled' : onTime ? 'On time' : expected,
-      platform: s.platform || 'TBC',
-      operator: s.operator_name,
-      durationMinutes: null, // TransportAPI's live board doesn't expose calling-point arrival times
-      isCancelled,
-    };
-  });
-}
-
+// No fallback provider here on purpose: this script runs unattended every
+// 5 minutes, and TransportAPI's free plan caps out at just 30 requests a
+// day - a single Huxley2 outage windowed across a whole day of automated
+// runs would blow through that budget almost immediately. If Huxley2
+// fails, this pair just keeps whatever data it last had.
 async function fetchPair(from, to, log) {
   try {
     const services = await fetchFromHuxley(from, to);
-    console.log(`[${from}->${to}] debug: used Huxley2, ${services.length} services`);
+    console.log(`[${from}->${to}] used Huxley2, ${services.length} services`);
     return services;
-  } catch (huxleyErr) {
-    console.log(`[${from}->${to}] debug: Huxley2 failed (${huxleyErr.message}), trying TransportAPI`);
-    try {
-      const services = await fetchFromTransportApi(from, to);
-      console.log(`[${from}->${to}] debug: used TransportAPI, ${services.length} services`);
-      return services;
-    } catch (transportErr) {
-      const message = `[${from}->${to}] Huxley2: ${huxleyErr.message} | TransportAPI: ${transportErr.message}`;
-      console.error(message);
-      log.push(message);
-      return null;
-    }
+  } catch (err) {
+    const message = `[${from}->${to}] Huxley2: ${err.message}`;
+    console.error(message);
+    log.push(message);
+    return null;
   }
 }
 
@@ -190,7 +152,7 @@ async function main() {
   fs.mkdirSync(path.dirname(OUT_PATH), { recursive: true });
   fs.writeFileSync(OUT_PATH, JSON.stringify(output, null, 2) + '\n');
   appendToLog(errorLog);
-  console.log('Wrote', OUT_PATH, anySuccess ? '(updated)' : '(kept previous data, both providers failed)');
+  console.log('Wrote', OUT_PATH, anySuccess ? '(updated)' : '(kept previous data, Huxley2 failed)');
 }
 
 main().catch((err) => {
