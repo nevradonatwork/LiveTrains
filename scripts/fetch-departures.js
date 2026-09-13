@@ -12,7 +12,13 @@ const PAIRS = [
 
 const OUT_PATH = path.join(__dirname, '..', 'docs', 'data', 'departures.json');
 const LOG_PATH = path.join(__dirname, '..', 'docs', 'data', 'errors.txt');
+const USAGE_PATH = path.join(__dirname, '..', 'docs', 'data', 'transportapi-usage.json');
 const MAX_LOG_LINES = 200;
+
+// TransportAPI's free plan allows only 30 requests/day. Leave a safety
+// margin under that so a Huxley2 outage never risks exhausting the quota
+// the user might also be using manually elsewhere.
+const TRANSPORTAPI_DAILY_BUDGET = 20;
 
 function toMinutesOfDay(time) {
   const [hours, mins] = time.split(':').map(Number);
@@ -100,21 +106,87 @@ async function fetchFromHuxley(from, to) {
   });
 }
 
-// No fallback provider here on purpose: this script runs unattended every
-// 5 minutes, and TransportAPI's free plan caps out at just 30 requests a
-// day - a single Huxley2 outage windowed across a whole day of automated
-// runs would blow through that budget almost immediately. If Huxley2
-// fails, this pair just keeps whatever data it last had.
-async function fetchPair(from, to, log) {
+async function fetchFromTransportApi(from, to) {
+  const appId = process.env.TRANSPORTAPI_APP_ID;
+  const appKey = process.env.TRANSPORTAPI_APP_KEY;
+
+  if (!appId || !appKey) {
+    throw new Error('TRANSPORTAPI_APP_ID / TRANSPORTAPI_APP_KEY not set');
+  }
+
+  const url = `https://transportapi.com/v3/uk/train/station/${from}/live.json?app_id=${appId}&app_key=${appKey}&calling_at=${to}&train_status=passenger`;
+  const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
+
+  if (!res.ok) {
+    const detail = await res.text().catch(() => '');
+    throw new Error(`TransportAPI error ${res.status}${detail ? `: ${detail}` : ''}`);
+  }
+
+  const data = await res.json();
+  const all = (data.departures && data.departures.all) || [];
+
+  return all.map((s) => {
+    const status = (s.status || '').toUpperCase();
+    const isCancelled = status === 'CANCELLED';
+    const expected = s.expected_departure_time || s.aimed_departure_time;
+    const onTime = !isCancelled && expected === s.aimed_departure_time;
+
+    return {
+      scheduledTime: s.aimed_departure_time,
+      expectedTime: isCancelled ? 'Cancelled' : onTime ? 'On time' : expected,
+      platform: s.platform || 'TBC',
+      operator: s.operator_name,
+      durationMinutes: null, // TransportAPI's live board doesn't expose calling-point arrival times
+      isCancelled,
+    };
+  });
+}
+
+function loadUsage() {
+  const today = new Date().toISOString().slice(0, 10);
+
+  try {
+    const usage = JSON.parse(fs.readFileSync(USAGE_PATH, 'utf8'));
+    if (usage.date === today) return usage;
+  } catch {
+    // No previous usage file yet.
+  }
+
+  return { date: today, count: 0 };
+}
+
+function saveUsage(usage) {
+  fs.mkdirSync(path.dirname(USAGE_PATH), { recursive: true });
+  fs.writeFileSync(USAGE_PATH, JSON.stringify(usage, null, 2) + '\n');
+}
+
+// Huxley2 first; only spend TransportAPI quota (capped per day) if it
+// fails, so a short Huxley2 blip still gets live data, while a long
+// outage safely falls back to keeping whatever data was last fetched.
+async function fetchPair(from, to, log, usage) {
   try {
     const services = await fetchFromHuxley(from, to);
     console.log(`[${from}->${to}] used Huxley2, ${services.length} services`);
     return services;
-  } catch (err) {
-    const message = `[${from}->${to}] Huxley2: ${err.message}`;
-    console.error(message);
-    log.push(message);
-    return null;
+  } catch (huxleyErr) {
+    if (usage.count >= TRANSPORTAPI_DAILY_BUDGET) {
+      const message = `[${from}->${to}] Huxley2: ${huxleyErr.message} (TransportAPI daily budget used up, kept previous data)`;
+      console.error(message);
+      log.push(message);
+      return null;
+    }
+
+    try {
+      const services = await fetchFromTransportApi(from, to);
+      usage.count += 1;
+      console.log(`[${from}->${to}] used TransportAPI (${usage.count}/${TRANSPORTAPI_DAILY_BUDGET} today), ${services.length} services`);
+      return services;
+    } catch (transportErr) {
+      const message = `[${from}->${to}] Huxley2: ${huxleyErr.message} | TransportAPI: ${transportErr.message}`;
+      console.error(message);
+      log.push(message);
+      return null;
+    }
   }
 }
 
@@ -147,10 +219,11 @@ async function main() {
 
   const routes = { ...existing.routes };
   const errorLog = [];
+  const usage = loadUsage();
   let anySuccess = false;
 
   for (const [from, to] of PAIRS) {
-    const services = await fetchPair(from, to, errorLog);
+    const services = await fetchPair(from, to, errorLog, usage);
 
     if (services) {
       routes[`${from}-${to}`] = { services };
@@ -166,6 +239,7 @@ async function main() {
   fs.mkdirSync(path.dirname(OUT_PATH), { recursive: true });
   fs.writeFileSync(OUT_PATH, JSON.stringify(output, null, 2) + '\n');
   appendToLog(errorLog);
+  saveUsage(usage);
   console.log('Wrote', OUT_PATH, anySuccess ? '(updated)' : '(kept previous data, Huxley2 failed)');
 }
 
