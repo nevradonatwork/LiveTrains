@@ -8,6 +8,8 @@ const PAIRS = [
 ];
 
 const OUT_PATH = path.join(__dirname, '..', 'docs', 'data', 'departures.json');
+const LOG_PATH = path.join(__dirname, '..', 'docs', 'data', 'errors.txt');
+const MAX_LOG_LINES = 200;
 
 async function fetchFromHuxley(from, to) {
   const url = `https://huxley2.azurewebsites.net/departures/${from}/to/${to}?expand=false&numRows=20`;
@@ -70,17 +72,37 @@ async function fetchFromTransportApi(from, to) {
   });
 }
 
-async function fetchPair(from, to) {
+async function fetchPair(from, to, log) {
   try {
     return await fetchFromHuxley(from, to);
   } catch (huxleyErr) {
     try {
       return await fetchFromTransportApi(from, to);
     } catch (transportErr) {
-      console.error(`[${from}->${to}] Huxley2: ${huxleyErr.message} | TransportAPI: ${transportErr.message}`);
+      const message = `[${from}->${to}] Huxley2: ${huxleyErr.message} | TransportAPI: ${transportErr.message}`;
+      console.error(message);
+      log.push(message);
       return null;
     }
   }
+}
+
+function appendToLog(lines) {
+  if (!lines.length) return;
+
+  let existingLines = [];
+  try {
+    existingLines = fs.readFileSync(LOG_PATH, 'utf8').split('\n').filter(Boolean);
+  } catch {
+    // No previous log file yet.
+  }
+
+  const timestamp = new Date().toISOString();
+  const newLines = lines.map((line) => `${timestamp} ${line}`);
+  const combined = [...existingLines, ...newLines].slice(-MAX_LOG_LINES);
+
+  fs.mkdirSync(path.dirname(LOG_PATH), { recursive: true });
+  fs.writeFileSync(LOG_PATH, combined.join('\n') + '\n');
 }
 
 async function main() {
@@ -93,10 +115,11 @@ async function main() {
   }
 
   const routes = { ...existing.routes };
+  const errorLog = [];
   let anySuccess = false;
 
   for (const [from, to] of PAIRS) {
-    const services = await fetchPair(from, to);
+    const services = await fetchPair(from, to, errorLog);
 
     if (services) {
       routes[`${from}-${to}`] = { services };
@@ -111,6 +134,7 @@ async function main() {
 
   fs.mkdirSync(path.dirname(OUT_PATH), { recursive: true });
   fs.writeFileSync(OUT_PATH, JSON.stringify(output, null, 2) + '\n');
+  appendToLog(errorLog);
   console.log('Wrote', OUT_PATH, anySuccess ? '(updated)' : '(kept previous data, both providers failed)');
 }
 
