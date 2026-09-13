@@ -51,6 +51,25 @@ function renderStations() {
   routeTitle.textContent = `Showing trains from ${fromStation.name} to ${toStation.name}`;
 }
 
+async function fetchJson(url) {
+  let response;
+
+  try {
+    response = await fetch(url, { headers: { Accept: 'application/json' } });
+  } catch (err) {
+    // The request never got an HTTP response at all - offline, DNS failure,
+    // or the browser blocked it before it left (e.g. no CORS headers).
+    throw new Error('Could not reach the live train service. Check your internet connection.');
+  }
+
+  if (!response.ok) {
+    const detail = await response.text().catch(() => '');
+    throw new Error(`Server error (${response.status})${detail ? `: ${detail}` : ''}`);
+  }
+
+  return response.json();
+}
+
 async function loadDepartures() {
   renderStations();
   setStatus('Loading…');
@@ -58,14 +77,7 @@ async function loadDepartures() {
   const url = `${HUXLEY_BASE}/departures/${from}/to/${to}?expand=false&numRows=10`;
 
   try {
-    const response = await fetch(url, { headers: { Accept: 'application/json' } });
-
-    if (!response.ok) {
-      const detail = await response.text().catch(() => '');
-      throw new Error(`Server error (${response.status})${detail ? `: ${detail}` : ''}`);
-    }
-
-    const data = await response.json();
+    const data = await fetchJson(url);
 
     const services = (data.trainServices || []).map((s) => ({
       scheduledTime: s.std,
