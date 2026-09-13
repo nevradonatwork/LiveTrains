@@ -115,10 +115,15 @@ async function fetchFromTransportApi(from, to) {
 
 async function fetchPair(from, to, log) {
   try {
-    return await fetchFromHuxley(from, to);
+    const services = await fetchFromHuxley(from, to);
+    console.log(`[${from}->${to}] debug: used Huxley2, ${services.length} services`);
+    return services;
   } catch (huxleyErr) {
+    console.log(`[${from}->${to}] debug: Huxley2 failed (${huxleyErr.message}), trying TransportAPI`);
     try {
-      return await fetchFromTransportApi(from, to);
+      const services = await fetchFromTransportApi(from, to);
+      console.log(`[${from}->${to}] debug: used TransportAPI, ${services.length} services`);
+      return services;
     } catch (transportErr) {
       const message = `[${from}->${to}] Huxley2: ${huxleyErr.message} | TransportAPI: ${transportErr.message}`;
       console.error(message);
