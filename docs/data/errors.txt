@@ -10,3 +10,9 @@
 2026-09-13T21:31:48.615Z [RAY->NEM] Huxley2: Huxley2 departures error 500
 2026-09-13T21:31:48.615Z [NEM->VXH] Huxley2: Huxley2 departures error 500
 2026-09-13T21:31:48.615Z [VXH->NEM] Huxley2: Huxley2 departures error 500
+2026-09-13T21:32:54.789Z [NEM->WAT] Huxley2: Huxley2 departures error 500
+2026-09-13T21:32:54.789Z [WAT->NEM] Huxley2: Huxley2 departures error 500
+2026-09-13T21:32:54.789Z [NEM->RAY] Huxley2: Huxley2 departures error 500
+2026-09-13T21:32:54.789Z [RAY->NEM] Huxley2: Huxley2 departures error 500
+2026-09-13T21:32:54.789Z [NEM->VXH] Huxley2: Huxley2 departures error 500
+2026-09-13T21:32:54.789Z [VXH->NEM] Huxley2: Huxley2 departures error 500
