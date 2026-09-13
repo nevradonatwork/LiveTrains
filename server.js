@@ -16,19 +16,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 // with no uptime guarantee, so a TransportAPI account is a fallback (set
 // TRANSPORTAPI_APP_ID / TRANSPORTAPI_APP_KEY in the environment, e.g. a
 // local untracked .env file, to enable it).
-// Finds the calling point matching `crs` among a service's subsequent
-// calling points (only present when the request used expand=true).
-function findCallingPoint(service, crs) {
-  const lists = service.subsequentCallingPoints || [];
-
-  for (const list of lists) {
-    const match = (list.callingPoint || []).find((p) => p.crs === crs);
-    if (match) return match;
-  }
-
-  return null;
-}
-
 function toMinutesOfDay(time) {
   const [hours, mins] = time.split(':').map(Number);
   return hours * 60 + mins;
@@ -43,8 +30,8 @@ function journeyMinutes(departureTime, arrivalTime) {
   return diff;
 }
 
-async function fetchFromHuxley(from, to) {
-  const url = `https://huxley2.azurewebsites.net/departures/${from}/to/${to}?expand=true&numRows=20`;
+async function fetchHuxleyBoard(kind, crs, filterType, filterCrs) {
+  const url = `https://huxley2.azurewebsites.net/${kind}/${crs}/${filterType}/${filterCrs}?numRows=20`;
   const upstream = await fetch(url, {
     headers: { Accept: 'application/json' },
     signal: AbortSignal.timeout(10000),
@@ -52,27 +39,44 @@ async function fetchFromHuxley(from, to) {
 
   if (!upstream.ok) {
     const detail = await upstream.text().catch(() => '');
-    throw new Error(`Huxley2 error ${upstream.status}${detail ? `: ${detail}` : ''}`);
+    throw new Error(`Huxley2 ${kind} error ${upstream.status}${detail ? `: ${detail}` : ''}`);
   }
 
-  const data = await upstream.json();
+  return upstream.json();
+}
+
+async function fetchFromHuxley(from, to) {
+  const data = await fetchHuxleyBoard('departures', from, 'to', to);
   const trainServices = data.trainServices || [];
 
   if (!trainServices.length && !data.generatedAt) {
     throw new Error('Huxley2 returned an empty response');
   }
 
+  // A second call to the destination's arrival board gives the scheduled
+  // arrival time (sta) for each service, matched by serviceID, so we can
+  // compute journey duration without needing calling-point details.
+  const arrivalTimes = {};
+  try {
+    const arrivalsData = await fetchHuxleyBoard('arrivals', to, 'from', from);
+    for (const s of arrivalsData.trainServices || []) {
+      if (s.serviceID) arrivalTimes[s.serviceID] = s.sta;
+    }
+  } catch {
+    // Duration just won't be available this round - not fatal.
+  }
+
   return {
     generatedAt: data.generatedAt || new Date().toISOString(),
     services: trainServices.map((s) => {
-      const arrival = findCallingPoint(s, to);
+      const arrivalTime = s.serviceID ? arrivalTimes[s.serviceID] : null;
 
       return {
         scheduledTime: s.std,
         expectedTime: s.etd,
         platform: s.platform || 'TBC',
         operator: s.operator,
-        durationMinutes: arrival ? journeyMinutes(s.std, arrival.st) : null,
+        durationMinutes: arrivalTime ? journeyMinutes(s.std, arrivalTime) : null,
         isCancelled: !!s.isCancelled,
       };
     }),

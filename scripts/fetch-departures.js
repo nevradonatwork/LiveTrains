@@ -10,19 +10,6 @@ const OUT_PATH = path.join(__dirname, '..', 'docs', 'data', 'departures.json');
 const LOG_PATH = path.join(__dirname, '..', 'docs', 'data', 'errors.txt');
 const MAX_LOG_LINES = 200;
 
-// Finds the calling point matching `crs` among a service's subsequent
-// calling points (only present when the request used expand=true).
-function findCallingPoint(service, crs) {
-  const lists = service.subsequentCallingPoints || [];
-
-  for (const list of lists) {
-    const match = (list.callingPoint || []).find((p) => p.crs === crs);
-    if (match) return match;
-  }
-
-  return null;
-}
-
 function toMinutesOfDay(time) {
   const [hours, mins] = time.split(':').map(Number);
   return hours * 60 + mins;
@@ -37,30 +24,47 @@ function journeyMinutes(departureTime, arrivalTime) {
   return diff;
 }
 
-async function fetchFromHuxley(from, to) {
-  const url = `https://huxley2.azurewebsites.net/departures/${from}/to/${to}?expand=true&numRows=20`;
+async function fetchHuxleyBoard(kind, crs, filterType, filterCrs) {
+  const url = `https://huxley2.azurewebsites.net/${kind}/${crs}/${filterType}/${filterCrs}?numRows=20`;
   const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
 
   if (!res.ok) {
-    throw new Error(`Huxley2 error ${res.status}`);
+    throw new Error(`Huxley2 ${kind} error ${res.status}`);
   }
 
-  const data = await res.json();
+  return res.json();
+}
+
+async function fetchFromHuxley(from, to) {
+  const data = await fetchHuxleyBoard('departures', from, 'to', to);
   const trainServices = data.trainServices || [];
 
   if (!trainServices.length && !data.generatedAt) {
     throw new Error('Huxley2 returned an empty response');
   }
 
+  // A second call to the destination's arrival board gives the scheduled
+  // arrival time (sta) for each service, matched by serviceID, so we can
+  // compute journey duration without needing calling-point details.
+  const arrivalTimes = {};
+  try {
+    const arrivalsData = await fetchHuxleyBoard('arrivals', to, 'from', from);
+    for (const s of arrivalsData.trainServices || []) {
+      if (s.serviceID) arrivalTimes[s.serviceID] = s.sta;
+    }
+  } catch {
+    // Duration just won't be available this round - not fatal.
+  }
+
   return trainServices.map((s) => {
-    const arrival = findCallingPoint(s, to);
+    const arrivalTime = s.serviceID ? arrivalTimes[s.serviceID] : null;
 
     return {
       scheduledTime: s.std,
       expectedTime: s.etd,
       platform: s.platform || 'TBC',
       operator: s.operator,
-      durationMinutes: arrival ? journeyMinutes(s.std, arrival.st) : null,
+      durationMinutes: arrivalTime ? journeyMinutes(s.std, arrivalTime) : null,
       isCancelled: !!s.isCancelled,
     };
   });
