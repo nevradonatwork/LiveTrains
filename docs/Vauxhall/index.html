@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LiveTrains &mdash; New Malden ⇄ Vauxhall</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16.png" />
+  <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
+  <link rel="manifest" href="../manifest.webmanifest" />
+  <meta name="theme-color" content="#ffffff" />
+  <link rel="stylesheet" href="../style.css?v=6" />
+</head>
+<body>
+  <div class="app">
+    <div class="route-card">
+      <button id="swap-btn" class="swap-btn" aria-label="Swap direction" title="Swap direction">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 6v12" />
+          <path d="M5 9l3-3 3 3" />
+          <path d="M16 18V6" />
+          <path d="M13 15l3 3 3-3" />
+        </svg>
+      </button>
+
+      <div class="stations">
+        <div class="station-row" id="station-from">
+          <span class="station-icon"></span>
+          <span class="station-name"></span>
+        </div>
+        <div class="station-row" id="station-to">
+          <span class="station-icon"></span>
+          <span class="station-name"></span>
+        </div>
+      </div>
+
+      <button id="refresh-btn" class="refresh-btn" aria-label="Refresh" title="Refresh">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 12a8 8 0 1 1-2.34-5.66" />
+          <path d="M20 4v5h-5" />
+        </svg>
+      </button>
+    </div>
+
+    <p id="route-title" class="sr-only" role="status"></p>
+    <div id="status" class="status"></div>
+
+    <table class="board">
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Expected</th>
+          <th>Platform</th>
+          <th>Duration</th>
+          <th>Operator</th>
+        </tr>
+      </thead>
+      <tbody id="board-body">
+      </tbody>
+    </table>
+
+    <footer>
+      <div>Live Trains by Nevra Donat</div>
+      <span id="last-updated"></span>
+    </footer>
+  </div>
+
+  <script>
+    window.BOARD_CONFIG = {
+      stations: {
+        NEM: { name: 'New Malden', icon: 'home' },
+        VXH: { name: 'Vauxhall', icon: 'pin' },
+      },
+      defaultFrom: 'NEM',
+      defaultTo: 'VXH',
+      dataPath: '../data/departures.json',
+    };
+  </script>
+  <script src="../assets/board.js?v=1"></script>
+</body>
+</html>
