@@ -18,3 +18,15 @@ npm start
 ```
 
 Sonra tarayıcıda `http://localhost:3000` adresini aç.
+
+## GitHub Pages ile yayınlama
+
+`docs/` klasörü, sunucusuz (backend'siz) çalışan, canlı veriyi doğrudan
+tarayıcıdan Huxley2'ye bağlanarak çeken statik bir kopyayı içerir. GitHub'ın
+web arayüzünden yayınlamak için:
+
+1. GitHub'da bu deponun sayfasına git.
+2. **Settings** &rarr; sol menüden **Pages**'e tıkla.
+3. **Build and deployment** altında **Source** olarak **Deploy from a branch**'i seç.
+4. **Branch** kısmında `main` branch'ini ve klasör olarak `/docs`'u seç, **Save**'e bas.
+5. Birkaç dakika içinde sayfa `https://<kullanıcı-adın>.github.io/LiveTrains/` adresinde yayınlanır (adres, Pages ekranının üstünde de gösterilir).

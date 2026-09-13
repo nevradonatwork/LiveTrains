@@ -1,0 +1,148 @@
+:root {
+  color-scheme: light dark;
+  --bg: #0b1220;
+  --panel: #121b2e;
+  --text: #eaf0fb;
+  --muted: #8fa2c2;
+  --accent: #ff8a00;
+  --good: #38c172;
+  --bad: #e3342f;
+  --border: #223252;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+.app {
+  width: 100%;
+  max-width: 720px;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+h1 {
+  font-size: 1.5rem;
+  margin: 0 0 4px;
+}
+
+.subtitle {
+  color: var(--muted);
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--text);
+  padding: 12px 16px;
+}
+
+.toggle-btn {
+  flex: 1;
+  font-weight: 600;
+  background: var(--accent);
+  color: #1a1200;
+  border: none;
+}
+
+.toggle-btn:active {
+  opacity: 0.85;
+}
+
+.refresh-btn {
+  width: 48px;
+  font-size: 1.2rem;
+}
+
+.status {
+  min-height: 20px;
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-bottom: 8px;
+}
+
+.status.error {
+  color: var(--bad);
+}
+
+.board {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.board th,
+.board td {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.92rem;
+}
+
+.board th {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.board tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.platform {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.on-time {
+  color: var(--good);
+}
+
+.delayed,
+.cancelled {
+  color: var(--bad);
+}
+
+footer {
+  text-align: center;
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+@media (max-width: 480px) {
+  .board th:nth-child(5),
+  .board td:nth-child(5) {
+    display: none;
+  }
+}
