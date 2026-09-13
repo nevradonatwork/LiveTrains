@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-09-13T20:13:52.393Z",
+  "generatedAt": "2026-09-13T20:15:15.778Z",
   "routes": {
     "NEM-WAT": {
       "services": [
         {
           "scheduledTime": "21:18",
-          "expectedTime": "21:17",
+          "expectedTime": "On time",
           "platform": "TBC",
           "operator": "South Western Railway",
           "durationMinutes": null,
@@ -37,7 +37,7 @@
         },
         {
           "scheduledTime": "22:10",
-          "expectedTime": "On time",
+          "expectedTime": "22:09",
           "platform": "TBC",
           "operator": "South Western Railway",
           "durationMinutes": null,
@@ -79,14 +79,6 @@
     },
     "WAT-NEM": {
       "services": [
-        {
-          "scheduledTime": "21:14",
-          "expectedTime": "On time",
-          "platform": "19",
-          "operator": "South Western Railway",
-          "durationMinutes": null,
-          "isCancelled": false
-        },
         {
           "scheduledTime": "21:18",
           "expectedTime": "On time",
