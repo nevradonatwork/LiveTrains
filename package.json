@@ -1,0 +1,12 @@
+{
+  "name": "livetrains",
+  "version": "1.0.0",
+  "description": "Live departure boards for New Malden <-> London Waterloo",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
