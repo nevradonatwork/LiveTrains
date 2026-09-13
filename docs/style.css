@@ -31,16 +31,6 @@ body {
   max-width: 560px;
 }
 
-header {
-  margin-bottom: 18px;
-}
-
-h1 {
-  font-size: 1.3rem;
-  margin: 0;
-  font-weight: 700;
-}
-
 .sr-only {
   position: absolute;
   width: 1px;
@@ -180,6 +170,9 @@ button {
 }
 
 footer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   text-align: center;
   margin-top: 14px;
   color: var(--muted);
