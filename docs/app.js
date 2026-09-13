@@ -36,6 +36,28 @@ function etdClass(etd) {
   return '';
 }
 
+function minutesUntil(service) {
+  if (service.isCancelled) return '—';
+
+  const timeStr = /^\d{1,2}:\d{2}$/.test(service.expectedTime) ? service.expectedTime : service.scheduledTime;
+  const [hours, mins] = timeStr.split(':').map(Number);
+
+  const now = new Date();
+  const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, mins, 0, 0);
+  let diffMs = target - now;
+
+  // Scheduled time already looks more than 6h in the past - it must be a
+  // service just after midnight, so it's really tomorrow.
+  if (diffMs < -6 * 60 * 60 * 1000) {
+    target.setDate(target.getDate() + 1);
+    diffMs = target - now;
+  }
+
+  const diffMin = Math.round(diffMs / 60000);
+  if (diffMin <= 0) return 'Due';
+  return `${diffMin} min`;
+}
+
 function renderStations() {
   const fromStation = STATIONS[from];
   const toStation = STATIONS[to];
@@ -90,6 +112,7 @@ function renderBoard(services) {
       <td class="${etdClass(s.isCancelled ? 'Cancelled' : s.expectedTime)}">${s.isCancelled ? 'Cancelled' : s.expectedTime}</td>
       <td class="platform">${s.platform}</td>
       <td>${s.destination}</td>
+      <td>${minutesUntil(s)}</td>
       <td>${s.operator || ''}</td>
     `;
 

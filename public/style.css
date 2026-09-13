@@ -187,8 +187,8 @@ footer {
 }
 
 @media (max-width: 480px) {
-  .board th:nth-child(5),
-  .board td:nth-child(5) {
+  .board th:nth-child(6),
+  .board td:nth-child(6) {
     display: none;
   }
 }
