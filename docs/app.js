@@ -1,5 +1,3 @@
-const HUXLEY_BASE = 'https://huxley2.azurewebsites.net';
-
 const ICONS = {
   home: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5 12 4l8 6.5"/><path d="M6 9.5V20h12V9.5"/></svg>',
   briefcase: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7.5" width="18" height="12" rx="2"/><path d="M8 7.5V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1.5"/><path d="M3 13h18"/></svg>',
@@ -57,45 +55,92 @@ async function fetchJson(url) {
   try {
     response = await fetch(url, { headers: { Accept: 'application/json' } });
   } catch (err) {
-    // The request never got an HTTP response at all - offline, DNS failure,
-    // or the browser blocked it before it left (e.g. no CORS headers).
-    throw new Error('Could not reach the live train service. Check your internet connection.');
+    throw new Error('request failed (offline, DNS, or blocked)');
   }
 
   if (!response.ok) {
     const detail = await response.text().catch(() => '');
-    throw new Error(`Server error (${response.status})${detail ? `: ${detail}` : ''}`);
+    throw new Error(`server error ${response.status}${detail ? `: ${detail}` : ''}`);
   }
 
   return response.json();
+}
+
+// Provider 1: Huxley2, a free CORS-enabled proxy for National Rail's live
+// departure boards. No API key needed, but it's a community demo with no
+// uptime guarantee.
+async function fetchFromHuxley(fromCode, toCode) {
+  const url = `https://huxley2.azurewebsites.net/departures/${fromCode}/to/${toCode}?expand=false&numRows=10`;
+  const data = await fetchJson(url);
+  const trainServices = data.trainServices || [];
+
+  if (!trainServices.length && !data.generatedAt) {
+    // An empty/near-empty body with no timestamp usually means the demo
+    // instance itself is down rather than "no trains right now".
+    throw new Error('empty response');
+  }
+
+  return {
+    generatedAt: data.generatedAt || Date.now(),
+    services: trainServices.map((s) => ({
+      scheduledTime: s.std,
+      expectedTime: s.etd,
+      platform: s.platform || 'TBC',
+      operator: s.operator,
+      destination: (s.destination && s.destination[0] && s.destination[0].locationName) || STATIONS[toCode].name,
+      isCancelled: !!s.isCancelled,
+    })),
+  };
+}
+
+// Provider 2 (fallback): TransportAPI's public sandbox credentials
+// (shared, rate-limited, but keyless to set up). Used only if Huxley2
+// fails or is unreachable.
+async function fetchFromTransportApi(fromCode, toCode) {
+  const url = `https://transportapi.com/v3/uk/train/station/${fromCode}/live.json?app_id=test&app_key=test&calling_at=${toCode}&train_status=passenger`;
+  const data = await fetchJson(url);
+  const all = (data.departures && data.departures.all) || [];
+
+  return {
+    generatedAt: Date.now(),
+    services: all.map((s) => {
+      const status = (s.status || '').toUpperCase();
+      const isCancelled = status === 'CANCELLED';
+      const expected = s.expected_departure_time || s.aimed_departure_time;
+      const onTime = !isCancelled && expected === s.aimed_departure_time;
+
+      return {
+        scheduledTime: s.aimed_departure_time,
+        expectedTime: isCancelled ? 'Cancelled' : onTime ? 'On time' : expected,
+        platform: s.platform || 'TBC',
+        operator: s.operator_name,
+        destination: s.destination_name || STATIONS[toCode].name,
+        isCancelled,
+      };
+    }),
+  };
 }
 
 async function loadDepartures() {
   renderStations();
   setStatus('Loading…');
 
-  const url = `${HUXLEY_BASE}/departures/${from}/to/${to}?expand=false&numRows=10`;
+  const errors = [];
 
-  try {
-    const data = await fetchJson(url);
+  for (const provider of [fetchFromHuxley, fetchFromTransportApi]) {
+    try {
+      const { generatedAt, services } = await provider(from, to);
 
-    const services = (data.trainServices || []).map((s) => ({
-      scheduledTime: s.std,
-      expectedTime: s.etd,
-      platform: s.platform || 'TBC',
-      operator: s.operator,
-      destination: (s.destination && s.destination[0] && s.destination[0].locationName) || STATIONS[to].name,
-      isCancelled: !!s.isCancelled,
-    }));
-
-    renderBoard(services);
-
-    const updated = new Date(data.generatedAt || Date.now());
-    lastUpdatedEl.textContent = `Last updated: ${updated.toLocaleTimeString('en-GB')}`;
-    setStatus(services.length ? '' : 'No scheduled services found right now.');
-  } catch (err) {
-    setStatus(`Could not load departures: ${err.message}`, true);
+      renderBoard(services);
+      lastUpdatedEl.textContent = `Last updated: ${new Date(generatedAt).toLocaleTimeString('en-GB')}`;
+      setStatus(services.length ? '' : 'No scheduled services found right now.');
+      return;
+    } catch (err) {
+      errors.push(err.message);
+    }
   }
+
+  setStatus(`Could not load departures: ${errors.join(' / ')}`, true);
 }
 
 function renderBoard(services) {
