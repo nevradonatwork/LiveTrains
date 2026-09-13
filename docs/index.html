@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LiveTrains &mdash; New Malden ⇄ Waterloo</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1 id="route-title">New Malden &rarr; London Waterloo</h1>
+      <p class="subtitle">Canlı tren kalkış tahtası</p>
+    </header>
+
+    <div class="controls">
+      <button id="toggle-btn" class="toggle-btn">Waterloo &rarr; New Malden trenlerini göster</button>
+      <button id="refresh-btn" class="refresh-btn" title="Yenile">&#8635;</button>
+    </div>
+
+    <div id="status" class="status"></div>
+
+    <table class="board">
+      <thead>
+        <tr>
+          <th>Saat</th>
+          <th>Tahmini</th>
+          <th>Platform</th>
+          <th>Varış</th>
+          <th>Operatör</th>
+        </tr>
+      </thead>
+      <tbody id="board-body">
+      </tbody>
+    </table>
+
+    <footer>
+      <span id="last-updated"></span>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
