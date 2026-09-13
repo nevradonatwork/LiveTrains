@@ -6,8 +6,8 @@ const STATIONS = {
 };
 
 const ROUTES = {
-  toWaterloo: { from: 'NEM', to: 'WAT', title: 'New Malden &rarr; London Waterloo', label: 'Waterloo &rarr; New Malden trenlerini göster' },
-  toNewMalden: { from: 'WAT', to: 'NEM', title: 'London Waterloo &rarr; New Malden', label: 'New Malden &rarr; Waterloo trenlerini göster' },
+  toWaterloo: { from: 'NEM', to: 'WAT', title: 'New Malden &rarr; London Waterloo', label: 'Show Waterloo &rarr; New Malden trains' },
+  toNewMalden: { from: 'WAT', to: 'NEM', title: 'London Waterloo &rarr; New Malden', label: 'Show New Malden &rarr; Waterloo trains' },
 };
 
 let currentRoute = 'toWaterloo';
@@ -38,15 +38,15 @@ async function loadDepartures() {
   const route = ROUTES[currentRoute];
   routeTitle.innerHTML = route.title;
   toggleBtn.innerHTML = route.label;
-  setStatus('Yükleniyor…');
+  setStatus('Loading…');
 
-  const url = `${HUXLEY_BASE}/departures/${route.from}/to/${route.to}?expand=false&numRows=10&accessToken=`;
+  const url = `${HUXLEY_BASE}/departures/${route.from}/to/${route.to}?expand=false&numRows=10`;
 
   try {
     const response = await fetch(url, { headers: { Accept: 'application/json' } });
 
     if (!response.ok) {
-      throw new Error(`Sunucu hatası (${response.status})`);
+      throw new Error(`Server error (${response.status})`);
     }
 
     const data = await response.json();
@@ -63,10 +63,10 @@ async function loadDepartures() {
     renderBoard(services);
 
     const updated = new Date(data.generatedAt || Date.now());
-    lastUpdatedEl.textContent = `Son güncelleme: ${updated.toLocaleTimeString('tr-TR')}`;
-    setStatus(services.length ? '' : 'Şu an planlanmış sefer bulunamadı.');
+    lastUpdatedEl.textContent = `Last updated: ${updated.toLocaleTimeString('en-GB')}`;
+    setStatus(services.length ? '' : 'No scheduled services found right now.');
   } catch (err) {
-    setStatus(`Veriler alınamadı: ${err.message}`, true);
+    setStatus(`Could not load departures: ${err.message}`, true);
   }
 }
 
@@ -78,7 +78,7 @@ function renderBoard(services) {
 
     row.innerHTML = `
       <td>${s.scheduledTime}</td>
-      <td class="${etdClass(s.isCancelled ? 'Cancelled' : s.expectedTime)}">${s.isCancelled ? 'İptal' : s.expectedTime}</td>
+      <td class="${etdClass(s.isCancelled ? 'Cancelled' : s.expectedTime)}">${s.isCancelled ? 'Cancelled' : s.expectedTime}</td>
       <td class="platform">${s.platform}</td>
       <td>${s.destination}</td>
       <td>${s.operator || ''}</td>
