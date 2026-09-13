@@ -32,7 +32,8 @@ app.get('/api/departures/:from/:to', async (req, res) => {
     });
 
     if (!upstream.ok) {
-      return res.status(502).json({ error: `Upstream error (${upstream.status}).` });
+      const detail = await upstream.text().catch(() => '');
+      return res.status(502).json({ error: `Upstream error (${upstream.status}).${detail ? ` ${detail}` : ''}` });
     }
 
     const data = await upstream.json();

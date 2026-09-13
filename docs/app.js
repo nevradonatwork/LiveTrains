@@ -46,7 +46,8 @@ async function loadDepartures() {
     const response = await fetch(url, { headers: { Accept: 'application/json' } });
 
     if (!response.ok) {
-      throw new Error(`Server error (${response.status})`);
+      const detail = await response.text().catch(() => '');
+      throw new Error(`Server error (${response.status})${detail ? `: ${detail}` : ''}`);
     }
 
     const data = await response.json();
