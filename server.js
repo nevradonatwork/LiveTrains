@@ -77,9 +77,19 @@ async function fetchFromHuxley(from, to) {
     // Duration just won't be available this round - not fatal.
   }
 
+  // Huxley2 occasionally lists the same physical service twice (e.g. once
+  // per coupled portion). Keep only the first occurrence of each serviceID.
+  const seenServiceIDs = new Set();
+  const uniqueServices = trainServices.filter((s) => {
+    if (!s.serviceID) return true;
+    if (seenServiceIDs.has(s.serviceID)) return false;
+    seenServiceIDs.add(s.serviceID);
+    return true;
+  });
+
   return {
     generatedAt: data.generatedAt || new Date().toISOString(),
-    services: trainServices.map((s) => {
+    services: uniqueServices.map((s) => {
       const arrivalTime = s.serviceID ? arrivalTimes[s.serviceID] : null;
 
       return {
