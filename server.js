@@ -17,7 +17,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // TRANSPORTAPI_APP_ID / TRANSPORTAPI_APP_KEY in the environment, e.g. a
 // local untracked .env file, to enable it).
 async function fetchFromHuxley(from, to) {
-  const url = `https://huxley2.azurewebsites.net/departures/${from}/to/${to}?expand=false&numRows=10`;
+  const url = `https://huxley2.azurewebsites.net/departures/${from}/to/${to}?expand=false&numRows=20`;
   const upstream = await fetch(url, {
     headers: { Accept: 'application/json' },
     signal: AbortSignal.timeout(10000),

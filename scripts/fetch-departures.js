@@ -10,7 +10,7 @@ const PAIRS = [
 const OUT_PATH = path.join(__dirname, '..', 'docs', 'data', 'departures.json');
 
 async function fetchFromHuxley(from, to) {
-  const url = `https://huxley2.azurewebsites.net/departures/${from}/to/${to}?expand=false&numRows=10`;
+  const url = `https://huxley2.azurewebsites.net/departures/${from}/to/${to}?expand=false&numRows=20`;
   const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
 
   if (!res.ok) {
