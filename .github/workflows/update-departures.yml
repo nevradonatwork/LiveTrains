@@ -31,6 +31,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/data/departures.json docs/data/errors.txt docs/data/transportapi-usage.json
+          git add docs/data/departures.json docs/data/transportapi-usage.json
           git diff --staged --quiet || git commit -m "Update live departures data"
           git push

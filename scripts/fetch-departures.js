@@ -11,9 +11,7 @@ const PAIRS = [
 ];
 
 const OUT_PATH = path.join(__dirname, '..', 'docs', 'data', 'departures.json');
-const LOG_PATH = path.join(__dirname, '..', 'docs', 'data', 'errors.txt');
 const USAGE_PATH = path.join(__dirname, '..', 'docs', 'data', 'transportapi-usage.json');
-const MAX_LOG_LINES = 200;
 
 // TransportAPI's free plan allows only 30 requests/day. Leave a safety
 // margin under that so a Huxley2 outage never risks exhausting the quota
@@ -299,22 +297,18 @@ async function fetchPair(from, to, log, usage) {
   }
 }
 
-function appendToLog(lines) {
+// Errors used to be written to a public docs/data/errors.txt file, but
+// that made anything echoed into an error message (e.g. a TransportAPI
+// response body) publicly visible on the site. Logging to the workflow
+// run's own console output instead keeps it out of the public site and
+// out of git history.
+function logErrors(lines) {
   if (!lines.length) return;
 
-  let existingLines = [];
-  try {
-    existingLines = fs.readFileSync(LOG_PATH, 'utf8').split('\n').filter(Boolean);
-  } catch {
-    // No previous log file yet.
-  }
-
   const timestamp = new Date().toISOString();
-  const newLines = lines.map((line) => `${timestamp} ${line}`);
-  const combined = [...existingLines, ...newLines].slice(-MAX_LOG_LINES);
-
-  fs.mkdirSync(path.dirname(LOG_PATH), { recursive: true });
-  fs.writeFileSync(LOG_PATH, combined.join('\n') + '\n');
+  for (const line of lines) {
+    console.error(`${timestamp} ${line}`);
+  }
 }
 
 async function main() {
@@ -347,7 +341,7 @@ async function main() {
 
   fs.mkdirSync(path.dirname(OUT_PATH), { recursive: true });
   fs.writeFileSync(OUT_PATH, JSON.stringify(output, null, 2) + '\n');
-  appendToLog(errorLog);
+  logErrors(errorLog);
   saveUsage(usage);
   console.log('Wrote', OUT_PATH, anySuccess ? '(updated)' : '(kept previous data, Huxley2 failed)');
 }
