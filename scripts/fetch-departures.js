@@ -59,7 +59,8 @@ async function fetchLdbwsBoard(kind, crs, filterType, filterCrs, attempt = 1) {
       await sleep(1000 * attempt);
       return fetchLdbwsBoard(kind, crs, filterType, filterCrs, attempt + 1);
     }
-    throw new Error(`LDBWS ${kind} error ${res.status}`);
+    const detail = await res.text().catch(() => '');
+    throw new Error(`LDBWS ${kind} error ${res.status}${detail ? `: ${detail.slice(0, 300)}` : ''}`);
   }
 
   return res.json();
