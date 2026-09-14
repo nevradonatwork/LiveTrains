@@ -90,6 +90,7 @@ function renderBoard(services) {
 
   services.forEach((s) => {
     const row = document.createElement('tr');
+    row.classList.toggle('cancelled-row', !!s.isCancelled);
 
     row.innerHTML = `
       <td>${s.scheduledTime}</td>
