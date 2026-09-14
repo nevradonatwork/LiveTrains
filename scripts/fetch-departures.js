@@ -99,11 +99,18 @@ async function fetchFromLdbws(from, to) {
   const arrivalTimes = {};
   try {
     const arrivalsData = await fetchLdbwsBoard('arrivals', to, 'from', from);
-    for (const s of arrivalsData.trainServices || []) {
+    const arrivalServices = arrivalsData.trainServices || [];
+
+    for (const s of arrivalServices) {
       if (s.serviceID) arrivalTimes[s.serviceID] = s.sta;
     }
-  } catch {
-    // Duration just won't be available this round - not fatal.
+
+    console.log(
+      `[${from}->${to}] LDBWS debug: ${trainServices.length} departures (sample serviceID=${trainServices[0]?.serviceID}), ` +
+        `${arrivalServices.length} arrivals (sample serviceID=${arrivalServices[0]?.serviceID}, sample sta=${arrivalServices[0]?.sta})`
+    );
+  } catch (err) {
+    console.log(`[${from}->${to}] LDBWS debug: arrivals fetch failed: ${err.message}`);
   }
 
   return dedupeAndMap(trainServices, arrivalTimes);
