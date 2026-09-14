@@ -33,25 +33,32 @@ GitHub'ın web arayüzünden yayınlamak için:
 
 GitHub Pages sadece statik dosya sunduğu için sayfanın kendisi hiçbir canlı
 API'ye istek atmaz. Bunun yerine bir **GitHub Actions** iş akışı
-(`.github/workflows/update-departures.yml`) her 5 dakikada bir çalışıp
-Huxley2'den veri çekip `docs/data/departures.json` dosyasını günceller;
-sayfa da sadece bu dosyayı okur. Huxley2 anahtar gerektirmediği için bu
-otomatik iş akışı hiçbir gizli bilgiye ihtiyaç duymuyor.
+(`.github/workflows/update-departures.yml`) her 5 dakikada bir çalışıp veri
+çekip `docs/data/departures.json` dosyasını günceller; sayfa da sadece bu
+dosyayı okur.
 
-Huxley2 o an geçici olarak yanıt vermezse (ücretsiz demo servisinin kendi
-belirttiği bir risk), sistem birkaç kez tekrar dener. Hâlâ olmazsa,
-**TransportAPI**'ye günlük bütçe sınırıyla (en fazla ~20 istek/gün, 30'luk
-ücretsiz limitin altında güvenli bir pay bırakarak) düşer; bütçe dolarsa
-mevcut veri korunur. Böylece kısa kesintilerde veri gelmeye devam eder,
-uzun kesintilerde ise kota asla riske girmeden eski veri gösterilir.
-Kullanım sayacı `docs/data/transportapi-usage.json` dosyasında tutulur.
-Hatalar `docs/data/errors.txt` dosyasına (zaman damgasıyla) yazılır, bu
-adrese tarayıcından doğrudan bakabilirsin:
+Veri kaynağı öncelik sırası:
+
+1. **LDBWS (Rail Data Marketplace / raildata.org.uk)**. National Rail'in
+   resmi, anahtarlı Darwin canlı veri servisi, "Live Departure Board"
+   ürünü üzerinden. Ana, güvenilir kaynak bu.
+2. **Huxley2** (ücretsiz, anahtar gerektirmeyen demo proxy'si), LDBWS
+   başarısız olursa yedek olarak denenir.
+3. **TransportAPI**, ikisi de başarısız olursa günlük bütçe sınırıyla
+   (en fazla ~20 istek/gün, 30'luk ücretsiz limitin altında güvenli bir
+   pay bırakarak) son çare olarak denenir; bütçe dolarsa mevcut veri
+   korunur.
+
+Böylece kısa kesintilerde veri gelmeye devam eder, uzun kesintilerde ise
+kota asla riske girmeden eski veri gösterilir. TransportAPI kullanım
+sayacı `docs/data/transportapi-usage.json` dosyasında tutulur. Hatalar
+`docs/data/errors.txt` dosyasına (zaman damgasıyla) yazılır, bu adrese
+tarayıcından doğrudan bakabilirsin:
 `https://<kullanıcı-adın>.github.io/LiveTrains/data/errors.txt`.
 
-Bu otomatik yedek için `TRANSPORTAPI_APP_ID` / `TRANSPORTAPI_APP_KEY` repo
-secret'larının tanımlı olması gerekiyor (bkz. **Settings → Secrets and
-variables → Actions**). `server.js` (yerelde `npm start` ile çalışan
-sürüm) de aynı ortam değişkenleriyle isteğe bağlı olarak TransportAPI'ye
-düşebiliyor, bütçe sınırı olmadan (yerel/manuel kullanım günde 30 isteği
-zorlamaz).
+Bu otomatik akış için `LDBWS_API_KEY` repo secret'ının tanımlı olması
+gerekiyor (bkz. **Settings → Secrets and variables → Actions**);
+`TRANSPORTAPI_APP_ID` / `TRANSPORTAPI_APP_KEY` ise sadece yedek olarak
+isteğe bağlı. `server.js` (yerelde `npm start` ile çalışan sürüm) de aynı
+ortam değişkenleriyle çalışır, bütçe sınırı olmadan (yerel/manuel kullanım
+günde 30 isteği zorlamaz).
