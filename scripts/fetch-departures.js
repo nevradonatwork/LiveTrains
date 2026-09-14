@@ -111,30 +111,41 @@ async function fetchFromLdbws(from, to) {
   // duration comes from GetDepBoardWithDetails instead, matched by
   // serviceID, which lists each service's subsequent calling points
   // (including the scheduled arrival time at the destination). The
-  // WithDetails endpoints cap numRows below 10, so two calls at
-  // different timeOffsets are combined to cover more of the 20-row
-  // departures list than a single batch of 9 would.
+  // WithDetails endpoints cap numRows below 10, so a second batch is
+  // chained right after where the first one's last train departs
+  // (rather than a fixed offset, which left a gap of uncovered trains
+  // on busier routes) to cover more of the 20-row departures list.
   const arrivalTimes = {};
   let totalDetailed = 0;
   let totalMatched = 0;
+  let timeOffset = 0;
 
-  for (const timeOffset of [0, 90]) {
+  for (let batch = 0; batch < 2; batch++) {
+    let detailedServices;
     try {
       const detailedData = await fetchLdbwsBoard('GetDepBoardWithDetails', from, 'to', to, 9, timeOffset);
-      const detailedServices = detailedData.trainServices || [];
-      totalDetailed += detailedServices.length;
-
-      for (const s of detailedServices) {
-        if (!s.serviceID) continue;
-        const arrivalTime = findArrivalTime(s, to);
-        if (arrivalTime) {
-          arrivalTimes[s.serviceID] = arrivalTime;
-          totalMatched += 1;
-        }
-      }
+      detailedServices = detailedData.trainServices || [];
     } catch (err) {
       console.log(`[${from}->${to}] LDBWS debug: details fetch (offset ${timeOffset}) failed: ${err.message}`);
+      break;
     }
+
+    totalDetailed += detailedServices.length;
+
+    for (const s of detailedServices) {
+      if (!s.serviceID) continue;
+      const arrivalTime = findArrivalTime(s, to);
+      if (arrivalTime) {
+        arrivalTimes[s.serviceID] = arrivalTime;
+        totalMatched += 1;
+      }
+    }
+
+    if (!detailedServices.length) break;
+
+    const first = detailedServices[0].std;
+    const last = detailedServices[detailedServices.length - 1].std;
+    timeOffset += journeyMinutes(first, last) + 1;
   }
 
   console.log(`[${from}->${to}] LDBWS debug: ${totalDetailed} detailed services, ${totalMatched} with a matched arrival time`);
