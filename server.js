@@ -34,6 +34,84 @@ function journeyMinutes(departureTime, arrivalTime) {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// Official National Rail Darwin feed via the Rail Data Marketplace
+// (raildata.org.uk), "Live Departure Board" product. Requires
+// LDBWS_API_KEY in the environment (e.g. a local untracked .env file),
+// sent as the x-apikey header.
+const LDBWS_BASE = 'https://api1.raildata.org.uk/1010-live-departure-board-dep1_2/LDBWS/api/20220120';
+
+async function fetchLdbwsBoard(kind, crs, filterType, filterCrs, attempt = 1) {
+  const apiKey = process.env.LDBWS_API_KEY;
+  if (!apiKey) {
+    throw new Error('LDBWS_API_KEY not set');
+  }
+
+  const endpoint = kind === 'departures' ? 'GetDepartureBoard' : 'GetArrivalBoard';
+  const url = `${LDBWS_BASE}/${endpoint}/${crs}?filterCrs=${filterCrs}&filterType=${filterType}&numRows=20`;
+  const upstream = await fetch(url, {
+    headers: { 'x-apikey': apiKey },
+    signal: AbortSignal.timeout(10000),
+  });
+
+  if (!upstream.ok) {
+    if (upstream.status >= 500 && attempt < 3) {
+      await sleep(1000 * attempt);
+      return fetchLdbwsBoard(kind, crs, filterType, filterCrs, attempt + 1);
+    }
+    const detail = await upstream.text().catch(() => '');
+    throw new Error(`LDBWS ${kind} error ${upstream.status}${detail ? `: ${detail}` : ''}`);
+  }
+
+  return upstream.json();
+}
+
+function dedupeAndMap(trainServices, arrivalTimes) {
+  const seenServiceIDs = new Set();
+  const uniqueServices = trainServices.filter((s) => {
+    if (!s.serviceID) return true;
+    if (seenServiceIDs.has(s.serviceID)) return false;
+    seenServiceIDs.add(s.serviceID);
+    return true;
+  });
+
+  return uniqueServices.map((s) => {
+    const arrivalTime = s.serviceID ? arrivalTimes[s.serviceID] : null;
+
+    return {
+      scheduledTime: s.std,
+      expectedTime: s.etd,
+      platform: s.platform || 'TBC',
+      operator: s.operator,
+      durationMinutes: arrivalTime ? journeyMinutes(s.std, arrivalTime) : null,
+      isCancelled: !!s.isCancelled,
+    };
+  });
+}
+
+async function fetchFromLdbws(from, to) {
+  const data = await fetchLdbwsBoard('departures', from, 'to', to);
+  const trainServices = data.trainServices || [];
+
+  if (!trainServices.length && !data.generatedAt) {
+    throw new Error('LDBWS returned an empty response');
+  }
+
+  const arrivalTimes = {};
+  try {
+    const arrivalsData = await fetchLdbwsBoard('arrivals', to, 'from', from);
+    for (const s of arrivalsData.trainServices || []) {
+      if (s.serviceID) arrivalTimes[s.serviceID] = s.sta;
+    }
+  } catch {
+    // Duration just won't be available this round - not fatal.
+  }
+
+  return {
+    generatedAt: data.generatedAt || new Date().toISOString(),
+    services: dedupeAndMap(trainServices, arrivalTimes),
+  };
+}
+
 // The Huxley2 demo is documented as having "zero guarantees of uptime" and
 // regularly returns transient 5xx errors, so a failed request gets a
 // couple of quick retries before giving up.
@@ -79,28 +157,9 @@ async function fetchFromHuxley(from, to) {
 
   // Huxley2 occasionally lists the same physical service twice (e.g. once
   // per coupled portion). Keep only the first occurrence of each serviceID.
-  const seenServiceIDs = new Set();
-  const uniqueServices = trainServices.filter((s) => {
-    if (!s.serviceID) return true;
-    if (seenServiceIDs.has(s.serviceID)) return false;
-    seenServiceIDs.add(s.serviceID);
-    return true;
-  });
-
   return {
     generatedAt: data.generatedAt || new Date().toISOString(),
-    services: uniqueServices.map((s) => {
-      const arrivalTime = s.serviceID ? arrivalTimes[s.serviceID] : null;
-
-      return {
-        scheduledTime: s.std,
-        expectedTime: s.etd,
-        platform: s.platform || 'TBC',
-        operator: s.operator,
-        durationMinutes: arrivalTime ? journeyMinutes(s.std, arrivalTime) : null,
-        isCancelled: !!s.isCancelled,
-      };
-    }),
+    services: dedupeAndMap(trainServices, arrivalTimes),
   };
 }
 
@@ -152,7 +211,7 @@ app.get('/api/departures/:from/:to', async (req, res) => {
 
   const errors = [];
 
-  for (const provider of [fetchFromHuxley, fetchFromTransportApi]) {
+  for (const provider of [fetchFromLdbws, fetchFromHuxley, fetchFromTransportApi]) {
     try {
       const { generatedAt, services } = await provider(from, to);
       return res.json({

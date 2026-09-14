@@ -36,6 +36,79 @@ function journeyMinutes(departureTime, arrivalTime) {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// Official National Rail Darwin feed via the Rail Data Marketplace
+// (raildata.org.uk), "Live Departure Board" product. Requires the
+// LDBWS_API_KEY repo secret, sent as the x-apikey header.
+const LDBWS_BASE = 'https://api1.raildata.org.uk/1010-live-departure-board-dep1_2/LDBWS/api/20220120';
+
+async function fetchLdbwsBoard(kind, crs, filterType, filterCrs, attempt = 1) {
+  const apiKey = process.env.LDBWS_API_KEY;
+  if (!apiKey) {
+    throw new Error('LDBWS_API_KEY not set');
+  }
+
+  const endpoint = kind === 'departures' ? 'GetDepartureBoard' : 'GetArrivalBoard';
+  const url = `${LDBWS_BASE}/${endpoint}/${crs}?filterCrs=${filterCrs}&filterType=${filterType}&numRows=20`;
+  const res = await fetch(url, {
+    headers: { 'x-apikey': apiKey },
+    signal: AbortSignal.timeout(10000),
+  });
+
+  if (!res.ok) {
+    if (res.status >= 500 && attempt < 3) {
+      await sleep(1000 * attempt);
+      return fetchLdbwsBoard(kind, crs, filterType, filterCrs, attempt + 1);
+    }
+    throw new Error(`LDBWS ${kind} error ${res.status}`);
+  }
+
+  return res.json();
+}
+
+function dedupeAndMap(trainServices, arrivalTimes) {
+  const seenServiceIDs = new Set();
+  const uniqueServices = trainServices.filter((s) => {
+    if (!s.serviceID) return true;
+    if (seenServiceIDs.has(s.serviceID)) return false;
+    seenServiceIDs.add(s.serviceID);
+    return true;
+  });
+
+  return uniqueServices.map((s) => {
+    const arrivalTime = s.serviceID ? arrivalTimes[s.serviceID] : null;
+
+    return {
+      scheduledTime: s.std,
+      expectedTime: s.etd,
+      platform: s.platform || 'TBC',
+      operator: s.operator,
+      durationMinutes: arrivalTime ? journeyMinutes(s.std, arrivalTime) : null,
+      isCancelled: !!s.isCancelled,
+    };
+  });
+}
+
+async function fetchFromLdbws(from, to) {
+  const data = await fetchLdbwsBoard('departures', from, 'to', to);
+  const trainServices = data.trainServices || [];
+
+  if (!trainServices.length && !data.generatedAt) {
+    throw new Error('LDBWS returned an empty response');
+  }
+
+  const arrivalTimes = {};
+  try {
+    const arrivalsData = await fetchLdbwsBoard('arrivals', to, 'from', from);
+    for (const s of arrivalsData.trainServices || []) {
+      if (s.serviceID) arrivalTimes[s.serviceID] = s.sta;
+    }
+  } catch {
+    // Duration just won't be available this round - not fatal.
+  }
+
+  return dedupeAndMap(trainServices, arrivalTimes);
+}
+
 // The Huxley2 demo is documented as having "zero guarantees of uptime" and
 // regularly returns transient 5xx errors, so a failed request gets a
 // couple of quick retries before giving up.
@@ -84,26 +157,7 @@ async function fetchFromHuxley(from, to) {
 
   // Huxley2 occasionally lists the same physical service twice (e.g. once
   // per coupled portion). Keep only the first occurrence of each serviceID.
-  const seenServiceIDs = new Set();
-  const uniqueServices = trainServices.filter((s) => {
-    if (!s.serviceID) return true;
-    if (seenServiceIDs.has(s.serviceID)) return false;
-    seenServiceIDs.add(s.serviceID);
-    return true;
-  });
-
-  return uniqueServices.map((s) => {
-    const arrivalTime = s.serviceID ? arrivalTimes[s.serviceID] : null;
-
-    return {
-      scheduledTime: s.std,
-      expectedTime: s.etd,
-      platform: s.platform || 'TBC',
-      operator: s.operator,
-      durationMinutes: arrivalTime ? journeyMinutes(s.std, arrivalTime) : null,
-      isCancelled: !!s.isCancelled,
-    };
-  });
+  return dedupeAndMap(trainServices, arrivalTimes);
 }
 
 async function fetchFromTransportApi(from, to) {
@@ -160,32 +214,40 @@ function saveUsage(usage) {
   fs.writeFileSync(USAGE_PATH, JSON.stringify(usage, null, 2) + '\n');
 }
 
-// Huxley2 first; only spend TransportAPI quota (capped per day) if it
-// fails, so a short Huxley2 blip still gets live data, while a long
-// outage safely falls back to keeping whatever data was last fetched.
+// Official LDBWS first (reliable, no daily cap under our subscription).
+// If that fails, fall back to the free Huxley2 demo, then only spend
+// TransportAPI quota (capped per day) as a last resort, so a long outage
+// of everything else safely falls back to keeping whatever data was last
+// fetched instead of ever risking the TransportAPI quota.
 async function fetchPair(from, to, log, usage) {
   try {
-    const services = await fetchFromHuxley(from, to);
-    console.log(`[${from}->${to}] used Huxley2, ${services.length} services`);
+    const services = await fetchFromLdbws(from, to);
+    console.log(`[${from}->${to}] used LDBWS, ${services.length} services`);
     return services;
-  } catch (huxleyErr) {
-    if (usage.count >= TRANSPORTAPI_DAILY_BUDGET) {
-      const message = `[${from}->${to}] Huxley2: ${huxleyErr.message} (TransportAPI daily budget used up, kept previous data)`;
-      console.error(message);
-      log.push(message);
-      return null;
-    }
-
+  } catch (ldbwsErr) {
     try {
-      const services = await fetchFromTransportApi(from, to);
-      usage.count += 1;
-      console.log(`[${from}->${to}] used TransportAPI (${usage.count}/${TRANSPORTAPI_DAILY_BUDGET} today), ${services.length} services`);
+      const services = await fetchFromHuxley(from, to);
+      console.log(`[${from}->${to}] used Huxley2, ${services.length} services`);
       return services;
-    } catch (transportErr) {
-      const message = `[${from}->${to}] Huxley2: ${huxleyErr.message} | TransportAPI: ${transportErr.message}`;
-      console.error(message);
-      log.push(message);
-      return null;
+    } catch (huxleyErr) {
+      if (usage.count >= TRANSPORTAPI_DAILY_BUDGET) {
+        const message = `[${from}->${to}] LDBWS: ${ldbwsErr.message} | Huxley2: ${huxleyErr.message} (TransportAPI daily budget used up, kept previous data)`;
+        console.error(message);
+        log.push(message);
+        return null;
+      }
+
+      try {
+        const services = await fetchFromTransportApi(from, to);
+        usage.count += 1;
+        console.log(`[${from}->${to}] used TransportAPI (${usage.count}/${TRANSPORTAPI_DAILY_BUDGET} today), ${services.length} services`);
+        return services;
+      } catch (transportErr) {
+        const message = `[${from}->${to}] LDBWS: ${ldbwsErr.message} | Huxley2: ${huxleyErr.message} | TransportAPI: ${transportErr.message}`;
+        console.error(message);
+        log.push(message);
+        return null;
+      }
     }
   }
 }
