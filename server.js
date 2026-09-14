@@ -40,14 +40,13 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 // sent as the x-apikey header.
 const LDBWS_BASE = 'https://api1.raildata.org.uk/1010-live-departure-board-dep1_2/LDBWS/api/20220120';
 
-async function fetchLdbwsBoard(kind, crs, filterType, filterCrs, attempt = 1) {
+async function fetchLdbwsBoard(endpoint, crs, filterType, filterCrs, numRows, attempt = 1) {
   const apiKey = process.env.LDBWS_API_KEY;
   if (!apiKey) {
     throw new Error('LDBWS_API_KEY not set');
   }
 
-  const endpoint = kind === 'departures' ? 'GetDepartureBoard' : 'GetArrivalBoard';
-  const url = `${LDBWS_BASE}/${endpoint}/${crs}?filterCrs=${filterCrs}&filterType=${filterType}&numRows=20`;
+  const url = `${LDBWS_BASE}/${endpoint}/${crs}?filterCrs=${filterCrs}&filterType=${filterType}&numRows=${numRows}`;
   const upstream = await fetch(url, {
     headers: { 'x-apikey': apiKey },
     signal: AbortSignal.timeout(10000),
@@ -56,13 +55,24 @@ async function fetchLdbwsBoard(kind, crs, filterType, filterCrs, attempt = 1) {
   if (!upstream.ok) {
     if (upstream.status >= 500 && attempt < 3) {
       await sleep(1000 * attempt);
-      return fetchLdbwsBoard(kind, crs, filterType, filterCrs, attempt + 1);
+      return fetchLdbwsBoard(endpoint, crs, filterType, filterCrs, numRows, attempt + 1);
     }
     const detail = await upstream.text().catch(() => '');
-    throw new Error(`LDBWS ${kind} error ${upstream.status}${detail ? `: ${detail}` : ''}`);
+    throw new Error(`LDBWS ${endpoint} error ${upstream.status}${detail ? `: ${detail}` : ''}`);
   }
 
   return upstream.json();
+}
+
+// Finds the scheduled arrival time at `destinationCrs` among a service's
+// subsequent calling points (only present on the "WithDetails" endpoints).
+function findArrivalTime(service, destinationCrs) {
+  for (const list of service.subsequentCallingPoints || []) {
+    for (const point of list.callingPoint || []) {
+      if (point.crs === destinationCrs) return point.st;
+    }
+  }
+  return null;
 }
 
 function dedupeAndMap(trainServices, arrivalTimes) {
@@ -89,21 +99,28 @@ function dedupeAndMap(trainServices, arrivalTimes) {
 }
 
 async function fetchFromLdbws(from, to) {
-  const data = await fetchLdbwsBoard('departures', from, 'to', to);
+  const data = await fetchLdbwsBoard('GetDepartureBoard', from, 'to', to, 20);
   const trainServices = data.trainServices || [];
 
   if (!trainServices.length && !data.generatedAt) {
     throw new Error('LDBWS returned an empty response');
   }
 
+  // The "Live Departure Board" product doesn't route GetArrivalBoard, so
+  // duration comes from GetDepBoardWithDetails instead, matched by
+  // serviceID, which lists each service's subsequent calling points
+  // (including the scheduled arrival time at the destination). The
+  // WithDetails endpoints cap numRows below 10.
   const arrivalTimes = {};
   try {
-    const arrivalsData = await fetchLdbwsBoard('arrivals', to, 'from', from);
-    for (const s of arrivalsData.trainServices || []) {
-      if (s.serviceID) arrivalTimes[s.serviceID] = s.sta;
+    const detailedData = await fetchLdbwsBoard('GetDepBoardWithDetails', from, 'to', to, 9);
+    for (const s of detailedData.trainServices || []) {
+      if (!s.serviceID) continue;
+      const arrivalTime = findArrivalTime(s, to);
+      if (arrivalTime) arrivalTimes[s.serviceID] = arrivalTime;
     }
   } catch (err) {
-    console.log(`[${from}->${to}] LDBWS debug: arrivals fetch failed: ${err.message}`);
+    console.log(`[${from}->${to}] LDBWS debug: details fetch failed: ${err.message}`);
   }
 
   return {
