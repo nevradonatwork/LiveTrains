@@ -216,7 +216,10 @@ async function fetchFromTransportApi(from, to) {
   const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
 
   if (!res.ok) {
-    const detail = await res.text().catch(() => '');
+    // TransportAPI's own error bodies echo back the app_id (and a
+    // partially masked app_key), so redact both before this ever lands
+    // in the public error log.
+    const detail = (await res.text().catch(() => '')).split(appId).join('[redacted]').split(appKey).join('[redacted]');
     throw new Error(`TransportAPI error ${res.status}${detail ? `: ${detail}` : ''}`);
   }
 
