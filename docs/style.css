@@ -169,6 +169,17 @@ button {
   color: var(--bad);
 }
 
+.cancelled-row td {
+  text-decoration: line-through;
+  font-style: italic;
+  opacity: 0.7;
+}
+
+.cancelled-row .cancelled {
+  text-decoration: none;
+  font-style: normal;
+}
+
 footer {
   display: flex;
   flex-direction: column;
