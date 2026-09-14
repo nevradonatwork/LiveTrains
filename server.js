@@ -102,8 +102,8 @@ async function fetchFromLdbws(from, to) {
     for (const s of arrivalsData.trainServices || []) {
       if (s.serviceID) arrivalTimes[s.serviceID] = s.sta;
     }
-  } catch {
-    // Duration just won't be available this round - not fatal.
+  } catch (err) {
+    console.log(`[${from}->${to}] LDBWS debug: arrivals fetch failed: ${err.message}`);
   }
 
   return {
