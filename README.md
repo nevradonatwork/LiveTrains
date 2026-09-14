@@ -1,64 +1,86 @@
 # LiveTrains
 
-New Malden ⇄ London Waterloo arasında canlı tren kalkış tahtası.
+A live UK train departure board for three routes:
 
-Uygulama açıldığında New Malden'dan Waterloo'ya giden trenleri gösterir.
-Üstteki düğmeye basınca Waterloo'dan New Malden'a giden trenlere (platform
-ve saat bilgisiyle) geçer. Liste 30 saniyede bir otomatik yenilenir.
+- New Malden ⇄ London Waterloo (main page)
+- New Malden ⇄ Raynes Park (`/RaynesPark`)
+- New Malden ⇄ Vauxhall (`/Vauxhall`)
 
-Veri kaynağı: [Huxley2](https://huxley2.azurewebsites.net), National
-Rail'in ücretsiz, anahtar gerektirmeyen proxy'si.
+Each page opens showing departures in one direction. A circular swap
+button flips the view to the other direction, with platform, expected
+status, and journey duration shown for each train. The board
+auto-refreshes every 60 seconds.
 
-## Çalıştırma
+## Running locally
 
 ```bash
 npm install
 npm start
 ```
 
-Sonra tarayıcıda `http://localhost:3000` adresini aç.
+Then open `http://localhost:3000` in your browser.
 
-## GitHub Pages ile yayınlama
+## Publishing on GitHub Pages
 
-`docs/` klasörü sunucusuz (backend'siz) çalışan statik bir kopyayı içerir.
-GitHub'ın web arayüzünden yayınlamak için:
+The `docs/` folder contains a fully static copy of the site, no backend
+required. To publish it from GitHub's web interface:
 
-1. GitHub'da bu deponun sayfasına git.
-2. **Settings** &rarr; sol menüden **Pages**'e tıkla.
-3. **Build and deployment** altında **Source** olarak **Deploy from a branch**'i seç.
-4. **Branch** kısmında `main` branch'ini ve klasör olarak `/docs`'u seç, **Save**'e bas.
-5. Birkaç dakika içinde sayfa `https://<kullanıcı-adın>.github.io/LiveTrains/` adresinde yayınlanır (adres, Pages ekranının üstünde de gösterilir).
+1. Go to this repository's page on GitHub.
+2. **Settings** &rarr; **Pages** in the left sidebar.
+3. Under **Build and deployment**, set **Source** to **Deploy from a
+   branch**.
+4. Set **Branch** to `main` and the folder to `/docs`, then **Save**.
+5. Within a few minutes the site is live at
+   `https://<your-username>.github.io/LiveTrains/` (also shown at the
+   top of the Pages settings screen).
 
-## Canlı veri nasıl güncelleniyor
+## How the live data is updated
 
-GitHub Pages sadece statik dosya sunduğu için sayfanın kendisi hiçbir canlı
-API'ye istek atmaz. Bunun yerine bir **GitHub Actions** iş akışı
-(`.github/workflows/update-departures.yml`) her 5 dakikada bir çalışıp veri
-çekip `docs/data/departures.json` dosyasını günceller; sayfa da sadece bu
-dosyayı okur.
+GitHub Pages only serves static files, so the page itself never calls
+any live API directly. Instead, a **GitHub Actions** workflow
+(`.github/workflows/update-departures.yml`) runs every 5 minutes, fetches
+fresh data, and updates `docs/data/departures.json`; the page just reads
+that file.
 
-Veri kaynağı öncelik sırası:
+Data source priority:
 
-1. **LDBWS (Rail Data Marketplace / raildata.org.uk)**. National Rail'in
-   resmi, anahtarlı Darwin canlı veri servisi, "Live Departure Board"
-   ürünü üzerinden. Ana, güvenilir kaynak bu.
-2. **Huxley2** (ücretsiz, anahtar gerektirmeyen demo proxy'si), LDBWS
-   başarısız olursa yedek olarak denenir.
-3. **TransportAPI**, ikisi de başarısız olursa günlük bütçe sınırıyla
-   (en fazla ~20 istek/gün, 30'luk ücretsiz limitin altında güvenli bir
-   pay bırakarak) son çare olarak denenir; bütçe dolarsa mevcut veri
-   korunur.
+1. **LDBWS**, via the [Rail Data Marketplace](https://raildata.org.uk)
+   "Live Departure Board" product, National Rail's official, authenticated
+   real-time Darwin feed. This is the primary, reliable source.
+2. **[Huxley2](https://huxley2.azurewebsites.net)**, a free, keyless demo
+   proxy in front of the same underlying Darwin feed, tried if LDBWS
+   fails.
+3. **TransportAPI**, tried as a last resort if both of the above fail,
+   capped at a daily budget (max ~20 requests/day, safely under its
+   30/day free-tier limit) so automation never risks exhausting the
+   quota; if the budget is spent, the previously fetched data is kept.
 
-Böylece kısa kesintilerde veri gelmeye devam eder, uzun kesintilerde ise
-kota asla riske girmeden eski veri gösterilir. TransportAPI kullanım
-sayacı `docs/data/transportapi-usage.json` dosyasında tutulur. Hatalar
-`docs/data/errors.txt` dosyasına (zaman damgasıyla) yazılır, bu adrese
-tarayıcından doğrudan bakabilirsin:
-`https://<kullanıcı-adın>.github.io/LiveTrains/data/errors.txt`.
+This means short outages still get live data, while a long outage of
+everything falls back to stale data rather than nothing. The
+TransportAPI usage counter is tracked in
+`docs/data/transportapi-usage.json`. Errors are logged with timestamps
+to `docs/data/errors.txt`, viewable directly in the browser at
+`https://<your-username>.github.io/LiveTrains/data/errors.txt`.
 
-Bu otomatik akış için `LDBWS_API_KEY` repo secret'ının tanımlı olması
-gerekiyor (bkz. **Settings → Secrets and variables → Actions**);
-`TRANSPORTAPI_APP_ID` / `TRANSPORTAPI_APP_KEY` ise sadece yedek olarak
-isteğe bağlı. `server.js` (yerelde `npm start` ile çalışan sürüm) de aynı
-ortam değişkenleriyle çalışır, bütçe sınırı olmadan (yerel/manuel kullanım
-günde 30 isteği zorlamaz).
+### Journey duration
+
+The subscribed "Live Departure Board" product only routes
+departure-board endpoints, not a separate arrival board. Duration is
+instead computed from `GetDepBoardWithDetails`, which lists each
+service's subsequent calling points (including the scheduled arrival
+time at the destination), matched back to the main departures list by
+service ID. That endpoint caps `numRows` below 10 per call, so two
+calls are chained together, the second starting right where the first
+one's last train departs, to cover as much of the 20-row departures
+list as possible without leaving a gap.
+
+### Required secrets
+
+This workflow needs a `CONSUMER_KEY` repository secret (see **Settings
+→ Secrets and variables → Actions**), the API key issued by
+raildata.org.uk for your LDBWS subscription, sent as the `x-apikey`
+header. `TRANSPORTAPI_APP_ID` / `TRANSPORTAPI_APP_KEY` are optional,
+only needed for the last-resort fallback. `server.js` (the local
+`npm start` version) uses the same environment variables, but without
+a daily budget cap, since local/manual use doesn't hit 30 requests a
+day.
