@@ -20,7 +20,9 @@ jobs:
 
       - name: Fetch live departures
         env:
-          LDBWS_API_KEY: ${{ secrets.LDBWS_API_KEY }}
+          # raildata.org.uk issues this as "Consumer Key"; it's the value
+          # sent as the x-apikey header to the LDBWS API.
+          LDBWS_API_KEY: ${{ secrets.CONSUMER_KEY }}
           TRANSPORTAPI_APP_ID: ${{ secrets.TRANSPORTAPI_APP_ID }}
           TRANSPORTAPI_APP_KEY: ${{ secrets.TRANSPORTAPI_APP_KEY }}
         run: node scripts/fetch-departures.js
