@@ -58,9 +58,11 @@ Data source priority:
 This means short outages still get live data, while a long outage of
 everything falls back to stale data rather than nothing. The
 TransportAPI usage counter is tracked in
-`docs/data/transportapi-usage.json`. Errors are logged with timestamps
-to `docs/data/errors.txt`, viewable directly in the browser at
-`https://<your-username>.github.io/LiveTrains/data/errors.txt`.
+`docs/data/transportapi-usage.json`. Errors are logged to the workflow
+run's own console output (visible under the repo's **Actions** tab)
+rather than to a file in `docs/`, since that would otherwise be public
+on the site along with anything an upstream API echoes back in an
+error message.
 
 ### Journey duration
 
