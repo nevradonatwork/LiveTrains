@@ -40,13 +40,13 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 // sent as the x-apikey header.
 const LDBWS_BASE = 'https://api1.raildata.org.uk/1010-live-departure-board-dep1_2/LDBWS/api/20220120';
 
-async function fetchLdbwsBoard(endpoint, crs, filterType, filterCrs, numRows, attempt = 1) {
+async function fetchLdbwsBoard(endpoint, crs, filterType, filterCrs, numRows, timeOffset = 0, attempt = 1) {
   const apiKey = process.env.LDBWS_API_KEY;
   if (!apiKey) {
     throw new Error('LDBWS_API_KEY not set');
   }
 
-  const url = `${LDBWS_BASE}/${endpoint}/${crs}?filterCrs=${filterCrs}&filterType=${filterType}&numRows=${numRows}`;
+  const url = `${LDBWS_BASE}/${endpoint}/${crs}?filterCrs=${filterCrs}&filterType=${filterType}&numRows=${numRows}&timeOffset=${timeOffset}`;
   const upstream = await fetch(url, {
     headers: { 'x-apikey': apiKey },
     signal: AbortSignal.timeout(10000),
@@ -55,7 +55,7 @@ async function fetchLdbwsBoard(endpoint, crs, filterType, filterCrs, numRows, at
   if (!upstream.ok) {
     if (upstream.status >= 500 && attempt < 3) {
       await sleep(1000 * attempt);
-      return fetchLdbwsBoard(endpoint, crs, filterType, filterCrs, numRows, attempt + 1);
+      return fetchLdbwsBoard(endpoint, crs, filterType, filterCrs, numRows, timeOffset, attempt + 1);
     }
     const detail = await upstream.text().catch(() => '');
     throw new Error(`LDBWS ${endpoint} error ${upstream.status}${detail ? `: ${detail}` : ''}`);
@@ -110,17 +110,21 @@ async function fetchFromLdbws(from, to) {
   // duration comes from GetDepBoardWithDetails instead, matched by
   // serviceID, which lists each service's subsequent calling points
   // (including the scheduled arrival time at the destination). The
-  // WithDetails endpoints cap numRows below 10.
+  // WithDetails endpoints cap numRows below 10, so two calls at
+  // different timeOffsets are combined to cover more of the 20-row
+  // departures list than a single batch of 9 would.
   const arrivalTimes = {};
-  try {
-    const detailedData = await fetchLdbwsBoard('GetDepBoardWithDetails', from, 'to', to, 9);
-    for (const s of detailedData.trainServices || []) {
-      if (!s.serviceID) continue;
-      const arrivalTime = findArrivalTime(s, to);
-      if (arrivalTime) arrivalTimes[s.serviceID] = arrivalTime;
+  for (const timeOffset of [0, 90]) {
+    try {
+      const detailedData = await fetchLdbwsBoard('GetDepBoardWithDetails', from, 'to', to, 9, timeOffset);
+      for (const s of detailedData.trainServices || []) {
+        if (!s.serviceID) continue;
+        const arrivalTime = findArrivalTime(s, to);
+        if (arrivalTime) arrivalTimes[s.serviceID] = arrivalTime;
+      }
+    } catch (err) {
+      console.log(`[${from}->${to}] LDBWS debug: details fetch (offset ${timeOffset}) failed: ${err.message}`);
     }
-  } catch (err) {
-    console.log(`[${from}->${to}] LDBWS debug: details fetch failed: ${err.message}`);
   }
 
   return {
