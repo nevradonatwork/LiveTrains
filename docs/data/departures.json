@@ -1,16 +1,8 @@
 {
-  "generatedAt": "2026-09-14T11:50:43.172Z",
+  "generatedAt": "2026-09-14T11:53:17.297Z",
   "routes": {
     "NEM-WAT": {
       "services": [
-        {
-          "scheduledTime": "12:49",
-          "expectedTime": "On time",
-          "platform": "4",
-          "operator": "South Western Railway",
-          "durationMinutes": null,
-          "isCancelled": false
-        },
         {
           "scheduledTime": "12:55",
           "expectedTime": "12:57",
@@ -277,7 +269,7 @@
       "services": [
         {
           "scheduledTime": "12:55",
-          "expectedTime": "12:58",
+          "expectedTime": "12:57",
           "platform": "1",
           "operator": "South Western Railway",
           "durationMinutes": null,
@@ -476,16 +468,8 @@
     "NEM-VXH": {
       "services": [
         {
-          "scheduledTime": "12:49",
-          "expectedTime": "On time",
-          "platform": "4",
-          "operator": "South Western Railway",
-          "durationMinutes": null,
-          "isCancelled": false
-        },
-        {
           "scheduledTime": "12:55",
-          "expectedTime": "12:58",
+          "expectedTime": "12:57",
           "platform": "1",
           "operator": "South Western Railway",
           "durationMinutes": null,
