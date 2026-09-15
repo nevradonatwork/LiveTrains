@@ -42,6 +42,28 @@ function formatDuration(service) {
   return `${service.durationMinutes}m`;
 }
 
+// The backing data file only refreshes every few minutes (and can lag
+// further if GitHub's scheduler is delayed), so a train can still be
+// listed after it has actually left. Hide anything whose scheduled
+// time is more than a minute in the past by the viewer's own clock,
+// so the board only ever shows upcoming/due trains regardless of how
+// stale the underlying fetch is.
+function isUpcoming(service) {
+  const [hours, mins] = service.scheduledTime.split(':').map(Number);
+  const now = new Date();
+  const scheduled = new Date(now);
+  scheduled.setHours(hours, mins, 0, 0);
+
+  // A train scheduled many hours "in the past" is actually an
+  // upcoming one just after midnight (e.g. it's 23:58 and the next
+  // train is 00:05) rather than one that already left.
+  if (scheduled.getTime() - now.getTime() < -12 * 60 * 60 * 1000) {
+    scheduled.setDate(scheduled.getDate() + 1);
+  }
+
+  return scheduled.getTime() > now.getTime() - 60000;
+}
+
 function renderStations() {
   const fromStation = STATIONS[from];
   const toStation = STATIONS[to];
@@ -72,7 +94,7 @@ async function loadDepartures() {
 
     const data = await res.json();
     const route = data.routes && data.routes[`${from}-${to}`];
-    const services = (route && route.services) || [];
+    const services = ((route && route.services) || []).filter(isUpcoming);
 
     renderBoard(services);
 
