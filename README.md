@@ -86,3 +86,38 @@ only needed for the last-resort fallback. `server.js` (the local
 `npm start` version) uses the same environment variables, but without
 a daily budget cap, since local/manual use doesn't hit 30 requests a
 day.
+
+## Optional: truly live data via a Cloudflare Worker
+
+GitHub Actions' `schedule` trigger is best-effort and can lag well past
+its configured interval, so `docs/data/departures.json` can go stale.
+`worker/ldbws-proxy.js` is a small Cloudflare Worker that holds the
+LDBWS key server-side and proxies a live request straight from the
+browser, so the page (initial load, the refresh button, and the
+60-second auto-refresh) isn't limited by GitHub's schedule at all. It's
+optional: if unset, the page just reads the static JSON file as usual.
+
+To set it up:
+
+1. Create a free account at [dash.cloudflare.com](https://dash.cloudflare.com)
+   if you don't already have one.
+2. **Workers & Pages** → **Create** → **Create Worker**, give it any
+   name, deploy the default template.
+3. Open the Worker → **Edit code** (Quick edit), replace the contents
+   with `worker/ldbws-proxy.js` from this repo, **Deploy**.
+4. Worker → **Settings** → **Variables and Secrets** → add an
+   **encrypted** variable named `CONSUMER_KEY` with the same LDBWS API
+   key used above.
+5. Copy the Worker's URL (shown at the top of its page, something like
+   `https://ldbws-proxy.<your-subdomain>.workers.dev`).
+6. In `docs/assets/board.js`, set `WORKER_URL` to that URL.
+7. If the site isn't served from `https://<your-username>.github.io`,
+   update `ALLOWED_ORIGINS` in `worker/ldbws-proxy.js` (and redeploy)
+   to match, otherwise the browser's CORS check will block it.
+
+The Worker only proxies `GetDepartureBoard`/`GetDepBoardWithDetails`
+(falling back to Huxley2 if LDBWS fails); it doesn't fall back to
+TransportAPI, since that fallback's daily budget tracking needs
+persistent storage that a stateless Worker request doesn't have. The
+GitHub Actions workflow and static JSON file keep running regardless,
+as the fallback path when the Worker itself is unreachable.
