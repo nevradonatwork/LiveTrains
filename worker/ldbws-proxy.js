@@ -203,8 +203,17 @@ export default {
         services = await fetchFromHuxley(from, to);
         source = 'huxley2';
       } catch (huxleyErr) {
+        // Temporary diagnostic: show what the Worker actually received
+        // for CONSUMER_KEY (never the full value) so a 401 can be told
+        // apart from "secret never arrived" vs "secret is wrong".
+        const key = env.CONSUMER_KEY;
+        const keyPreview = key ? `${key.length} chars, "${key.slice(0, 4)}...${key.slice(-4)}"` : 'MISSING (env.CONSUMER_KEY is empty/undefined)';
+
         return new Response(
-          JSON.stringify({ error: `LDBWS: ${ldbwsErr.message} | Huxley2: ${huxleyErr.message}` }),
+          JSON.stringify({
+            error: `LDBWS: ${ldbwsErr.message} | Huxley2: ${huxleyErr.message}`,
+            debug_keyPreview: keyPreview,
+          }),
           { status: 502, headers: { ...headers, 'Content-Type': 'application/json' } }
         );
       }
