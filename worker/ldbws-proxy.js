@@ -10,7 +10,10 @@
 // Deploy: paste this file into a Cloudflare Worker (dashboard "Quick
 // edit", or `wrangler deploy`), then set a CONSUMER_KEY secret on the
 // Worker (Settings -> Variables -> encrypted). Update ALLOWED_ORIGINS
-// below to match where the site is actually hosted.
+// below to match where the site is actually hosted. See the README's
+// "Optional: truly live data via a Cloudflare Worker" section for the
+// `wrangler secret put` deploy-command workaround this project needed
+// for the secret to actually reach env at runtime.
 
 const ALLOWED_ORIGINS = [
   'https://nevradonatwork.github.io',
