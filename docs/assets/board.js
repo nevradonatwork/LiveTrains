@@ -9,7 +9,7 @@ const ICONS = {
 
 // URL of the Cloudflare Worker proxy (see worker/ldbws-proxy.js). Leave
 // empty to always use the static JSON file GitHub Actions updates.
-const WORKER_URL = '';
+const WORKER_URL = 'https://livetrains.nevradonatwork.workers.dev';
 
 const { stations: STATIONS, defaultFrom, defaultTo, dataPath } = window.BOARD_CONFIG;
 
