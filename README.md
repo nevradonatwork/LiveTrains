@@ -104,15 +104,21 @@ to find `worker/ldbws-proxy.js`):
 1. Create a free account at [dash.cloudflare.com](https://dash.cloudflare.com)
    if you don't already have one.
 2. **Workers & Pages** → **Create** → connect this GitHub repository,
-   keep the default **Deploy command** (`npx wrangler deploy`), leave
-   **Build command** empty, **Deploy**.
-3. Worker → **Settings** → **Variables and Secrets** → add an
-   **encrypted** variable named `CONSUMER_KEY` with the same LDBWS API
-   key used above.
-4. Copy the Worker's URL (shown at the top of its page, something like
+   leave **Build command** empty, **Deploy**.
+3. On that same connection's config screen, under **Variables and
+   secrets**, add a secret named `CONSUMER_KEY` with the same LDBWS
+   API key used above.
+4. Change the **Deploy command** from `npx wrangler deploy` to:
+   `echo "$CONSUMER_KEY" | npx wrangler secret put CONSUMER_KEY && npx wrangler deploy`
+   — this is the reliable way to get the key from that
+   Deployments/build-config screen (a build-time variable) into an
+   actual runtime secret the Worker's `env` can read, since which
+   dashboard tab controls the Worker's runtime bindings vs. only the
+   build step turned out to be genuinely confusing to navigate by eye.
+5. Copy the Worker's URL (shown at the top of its page, something like
    `https://livetrains.<your-subdomain>.workers.dev`).
-5. In `docs/assets/board.js`, set `WORKER_URL` to that URL.
-6. If the site isn't served from `https://<your-username>.github.io`,
+6. In `docs/assets/board.js`, set `WORKER_URL` to that URL.
+7. If the site isn't served from `https://<your-username>.github.io`,
    update `ALLOWED_ORIGINS` in `worker/ldbws-proxy.js` (and push) to
    match, otherwise the browser's CORS check will block it.
 
