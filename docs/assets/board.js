@@ -7,6 +7,10 @@ const ICONS = {
   pin: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.5 7-11.5a7 7 0 1 0-14 0C5 14.5 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>',
 };
 
+// URL of the Cloudflare Worker proxy (see worker/ldbws-proxy.js). Leave
+// empty to always use the static JSON file GitHub Actions updates.
+const WORKER_URL = '';
+
 const { stations: STATIONS, defaultFrom, defaultTo, dataPath } = window.BOARD_CONFIG;
 
 // from -> to. Swapping the button flips these two codes.
@@ -77,29 +81,48 @@ function renderStations() {
   routeTitle.textContent = `Showing trains from ${fromStation.name} to ${toStation.name}`;
 }
 
-// The site never calls the live train APIs (or holds their keys) itself.
-// A GitHub Actions workflow fetches departures on a schedule using a
-// repository secret and commits the result here, so the page just reads
-// this same-origin JSON file - no CORS, no exposed credentials.
+// The page never holds a live-API key itself, so it can't call LDBWS
+// directly. WORKER_URL (set below) points at a small Cloudflare Worker
+// that holds the key server-side and proxies a live request on every
+// load/refresh, so the board isn't limited by how often GitHub Actions'
+// own (occasionally delayed) schedule last ran. If the Worker is unset
+// or unreachable, this falls back to the static JSON file that workflow
+// keeps updated, so the site still works without it.
+async function loadLive() {
+  const res = await fetch(`${WORKER_URL}?from=${from}&to=${to}`, { cache: 'no-store' });
+
+  if (!res.ok) {
+    throw new Error(`Live proxy error (${res.status})`);
+  }
+
+  const data = await res.json();
+  return { generatedAt: data.generatedAt, services: data.services || [] };
+}
+
+async function loadFromStaticFile() {
+  const res = await fetch(`${dataPath}?_=${Date.now()}`);
+
+  if (!res.ok) {
+    throw new Error(`Could not load data file (${res.status})`);
+  }
+
+  const data = await res.json();
+  const route = data.routes && data.routes[`${from}-${to}`];
+  return { generatedAt: data.generatedAt, services: (route && route.services) || [] };
+}
+
 async function loadDepartures() {
   renderStations();
   setStatus('Loading…');
 
   try {
-    const res = await fetch(`${dataPath}?_=${Date.now()}`);
-
-    if (!res.ok) {
-      throw new Error(`Could not load data file (${res.status})`);
-    }
-
-    const data = await res.json();
-    const route = data.routes && data.routes[`${from}-${to}`];
-    const services = ((route && route.services) || []).filter(isUpcoming);
+    const { generatedAt, services: rawServices } = WORKER_URL ? await loadLive().catch(loadFromStaticFile) : await loadFromStaticFile();
+    const services = rawServices.filter(isUpcoming);
 
     renderBoard(services);
 
-    lastUpdatedEl.textContent = data.generatedAt
-      ? `Last updated: ${new Date(data.generatedAt).toLocaleTimeString('en-GB')}`
+    lastUpdatedEl.textContent = generatedAt
+      ? `Last updated: ${new Date(generatedAt).toLocaleTimeString('en-GB')}`
       : 'Waiting for the first data update…';
     setStatus(services.length ? '' : 'No scheduled services found right now.');
   } catch (err) {
