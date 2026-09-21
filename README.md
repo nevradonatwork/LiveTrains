@@ -97,36 +97,43 @@ browser, so the page (initial load, the refresh button, and the
 60-second auto-refresh) isn't limited by GitHub's schedule at all. It's
 optional: if unset, the page just reads the static JSON file as usual.
 
-To set it up, either connect the repo to Cloudflare directly
-(auto-redeploys on every push, using `wrangler.toml` at the repo root
-to find `worker/ldbws-proxy.js`):
+The Worker is deployed by its own GitHub Actions workflow
+(`.github/workflows/deploy-worker.yml`), not by connecting the repo to
+Cloudflare's own "Workers Builds" GitHub integration — that route was
+tried first, but Cloudflare's dashboard has multiple, confusingly
+similar-looking places to set a "variable" (a build-config screen
+under Deployments, a Bindings tab for resource bindings like D1/KV),
+and none of them reliably made the secret reach the deployed Worker's
+`env` at runtime. Setting it via `wrangler secret put` from GitHub
+Actions instead reuses the same `CONSUMER_KEY` secret the LDBWS fetch
+workflow already uses reliably.
+
+To set it up:
 
 1. Create a free account at [dash.cloudflare.com](https://dash.cloudflare.com)
    if you don't already have one.
-2. **Workers & Pages** → **Create** → connect this GitHub repository,
-   leave **Build command** empty, **Deploy**.
-3. On that same connection's config screen, under **Variables and
-   secrets**, add a secret named `CONSUMER_KEY` with the same LDBWS
-   API key used above.
-4. Change the **Deploy command** from `npx wrangler deploy` to:
-   `echo "$CONSUMER_KEY" | npx wrangler secret put CONSUMER_KEY && npx wrangler deploy`
-   — this is the reliable way to get the key from that
-   Deployments/build-config screen (a build-time variable) into an
-   actual runtime secret the Worker's `env` can read, since which
-   dashboard tab controls the Worker's runtime bindings vs. only the
-   build step turned out to be genuinely confusing to navigate by eye.
-5. Copy the Worker's URL (shown at the top of its page, something like
-   `https://livetrains.<your-subdomain>.workers.dev`).
-6. In `docs/assets/board.js`, set `WORKER_URL` to that URL.
-7. If the site isn't served from `https://<your-username>.github.io`,
+2. **Workers & Pages** → **Create** → **Create Worker** (a blank one is
+   fine, the workflow below overwrites it), give it a name matching
+   `wrangler.toml`'s `name` field (`livetrains`), **Deploy**.
+3. Get your **Account ID** (right sidebar of the Workers & Pages
+   overview page).
+4. Create an API token: **My Profile** → **API Tokens** → **Create
+   Token** → the "Edit Cloudflare Workers" template (or a custom token
+   with `Account.Workers Scripts: Edit` permission) → **Continue to
+   summary** → **Create Token** → copy it (shown once).
+5. In this GitHub repo: **Settings** → **Secrets and variables** →
+   **Actions**, add two repository secrets: `CLOUDFLARE_ACCOUNT_ID`
+   (from step 3) and `CLOUDFLARE_API_TOKEN` (from step 4). The
+   `CONSUMER_KEY` secret from the LDBWS setup above is reused as-is,
+   nothing new needed there.
+6. Push (or manually run) the **Deploy Cloudflare Worker** workflow
+   from the **Actions** tab.
+7. Copy the Worker's URL (shown at the top of its page on Cloudflare,
+   something like `https://livetrains.<your-subdomain>.workers.dev`).
+8. In `docs/assets/board.js`, set `WORKER_URL` to that URL.
+9. If the site isn't served from `https://<your-username>.github.io`,
    update `ALLOWED_ORIGINS` in `worker/ldbws-proxy.js` (and push) to
    match, otherwise the browser's CORS check will block it.
-
-...or skip the GitHub connection and just paste the code by hand:
-**Workers & Pages** → **Create** → **Create Worker** → **Edit code**
-(Quick edit) → paste in `worker/ldbws-proxy.js`'s contents → **Deploy**,
-then the same secret/URL/CORS steps above (but you'll need to
-re-paste the file by hand after any future change to it).
 
 The Worker only proxies `GetDepartureBoard`/`GetDepBoardWithDetails`
 (falling back to Huxley2 if LDBWS fails); it doesn't fall back to

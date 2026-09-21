@@ -1,0 +1,35 @@
+name: Deploy Cloudflare Worker
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'worker/**'
+      - 'wrangler.toml'
+      - '.github/workflows/deploy-worker.yml'
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Setting the secret via wrangler CLI here (instead of Cloudflare's
+      # own dashboard) is deliberate: several attempts to set CONSUMER_KEY
+      # as a runtime secret through Cloudflare's dashboard UI (its
+      # Deployments build config, its Bindings tab) all left the deployed
+      # Worker's env.CONSUMER_KEY undefined. Doing it here reuses the same
+      # CONSUMER_KEY GitHub secret the LDBWS fetch workflow already uses
+      # reliably.
+      - name: Set CONSUMER_KEY secret and deploy Worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          echo "${{ secrets.CONSUMER_KEY }}" | npx wrangler secret put CONSUMER_KEY
+          npx wrangler deploy
