@@ -26,10 +26,14 @@ jobs:
       # Worker's env.CONSUMER_KEY undefined. Doing it here reuses the same
       # CONSUMER_KEY GitHub secret the LDBWS fetch workflow already uses
       # reliably.
-      - name: Set CONSUMER_KEY secret and deploy Worker
+      # Deploy first, then set the secret: wrangler refuses `secret put`
+      # if the latest uploaded version isn't the currently deployed one
+      # (a safety check against attaching a secret to an undeployed
+      # version), which an earlier version of this workflow hit.
+      - name: Deploy Worker and set CONSUMER_KEY secret
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          echo "${{ secrets.CONSUMER_KEY }}" | npx wrangler secret put CONSUMER_KEY
           npx wrangler deploy
+          echo "${{ secrets.CONSUMER_KEY }}" | npx wrangler secret put CONSUMER_KEY
