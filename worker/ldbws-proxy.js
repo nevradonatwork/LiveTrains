@@ -197,32 +197,23 @@ export default {
 
     let services;
     let source;
-    let ldbwsDebug = null;
 
     try {
       services = await fetchFromLdbws(env.CONSUMER_KEY, from, to);
       source = 'ldbws';
     } catch (ldbwsErr) {
-      // Temporary diagnostic: show what the Worker actually received for
-      // CONSUMER_KEY (never the full value) so a 401 can be told apart
-      // from "secret never arrived" vs "secret is wrong", even when the
-      // Huxley2 fallback below papers over it with working data.
-      const key = env.CONSUMER_KEY;
-      const keyPreview = key ? `${key.length} chars, "${key.slice(0, 4)}...${key.slice(-4)}"` : 'MISSING (env.CONSUMER_KEY is empty/undefined)';
-      ldbwsDebug = { error: ldbwsErr.message, keyPreview };
-
       try {
         services = await fetchFromHuxley(from, to);
         source = 'huxley2';
       } catch (huxleyErr) {
         return new Response(
-          JSON.stringify({ error: `LDBWS: ${ldbwsErr.message} | Huxley2: ${huxleyErr.message}`, debug_ldbws: ldbwsDebug }),
+          JSON.stringify({ error: `LDBWS: ${ldbwsErr.message} | Huxley2: ${huxleyErr.message}` }),
           { status: 502, headers: { ...headers, 'Content-Type': 'application/json' } }
         );
       }
     }
 
-    return new Response(JSON.stringify({ generatedAt: new Date().toISOString(), source, debug_ldbws: ldbwsDebug, services }), {
+    return new Response(JSON.stringify({ generatedAt: new Date().toISOString(), source, services }), {
       headers: { ...headers, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
     });
   },
