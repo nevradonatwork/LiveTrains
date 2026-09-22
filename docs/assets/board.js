@@ -38,6 +38,10 @@ function etdClass(etd) {
   if (value.includes('cancel')) return 'cancelled';
   if (value.includes('on time')) return 'on-time';
   if (value.includes('delay')) return 'delayed';
+  // LDBWS reports a delay either as the word "Delayed" or as the new,
+  // later expected time (e.g. "12:38") in place of "On time" - both
+  // mean the same thing to the viewer, so both get the amber styling.
+  if (/^\d{1,2}:\d{2}$/.test(etd.trim())) return 'delayed';
   return '';
 }
 
