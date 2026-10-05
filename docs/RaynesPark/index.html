@@ -9,7 +9,7 @@
   <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
   <link rel="manifest" href="manifest.webmanifest" />
   <meta name="theme-color" content="#ffffff" />
-  <link rel="stylesheet" href="../style.css?v=6" />
+  <link rel="stylesheet" href="../style.css?v=7" />
 </head>
 <body>
   <div class="app">
@@ -45,6 +45,11 @@
     <p id="route-title" class="sr-only" role="status"></p>
     <div id="status" class="status"></div>
 
+    <button id="earlier-btn" class="earlier-btn" type="button" aria-expanded="false">
+      <span>Earlier trains</span>
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6" /></svg>
+    </button>
+
     <table class="board">
       <thead>
         <tr>
@@ -76,6 +81,6 @@
       dataPath: '../data/departures.json',
     };
   </script>
-  <script src="../assets/board.js?v=2"></script>
+  <script src="../assets/board.js?v=3"></script>
 </body>
 </html>

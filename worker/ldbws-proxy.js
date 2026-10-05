@@ -55,14 +55,15 @@ async function fetchWithTimeout(url, options, ms) {
   }
 }
 
-async function fetchLdbwsBoard(apiKey, endpoint, crs, filterType, filterCrs, numRows, timeOffset = 0, attempt = 1) {
-  const url = `${LDBWS_BASE}/${endpoint}/${crs}?filterCrs=${filterCrs}&filterType=${filterType}&numRows=${numRows}&timeOffset=${timeOffset}`;
+async function fetchLdbwsBoard(apiKey, endpoint, crs, filterType, filterCrs, numRows, timeOffset = 0, timeWindow = null, attempt = 1) {
+  let url = `${LDBWS_BASE}/${endpoint}/${crs}?filterCrs=${filterCrs}&filterType=${filterType}&numRows=${numRows}&timeOffset=${timeOffset}`;
+  if (timeWindow != null) url += `&timeWindow=${timeWindow}`;
   const res = await fetchWithTimeout(url, { headers: { 'x-apikey': apiKey } }, 8000);
 
   if (!res.ok) {
     if (res.status >= 500 && attempt < 3) {
       await new Promise((resolve) => setTimeout(resolve, 500 * attempt));
-      return fetchLdbwsBoard(apiKey, endpoint, crs, filterType, filterCrs, numRows, timeOffset, attempt + 1);
+      return fetchLdbwsBoard(apiKey, endpoint, crs, filterType, filterCrs, numRows, timeOffset, timeWindow, attempt + 1);
     }
     throw new Error(`LDBWS ${endpoint} error ${res.status}`);
   }
@@ -101,8 +102,11 @@ function dedupeAndMap(trainServices, arrivalTimes) {
   });
 }
 
-async function fetchFromLdbws(apiKey, from, to) {
-  const data = await fetchLdbwsBoard(apiKey, 'GetDepartureBoard', from, 'to', to, 20);
+// options.timeOffset/timeWindow (minutes) let the "Earlier trains" button
+// ask for the board as it looked 50 minutes ago, covering only that past
+// window; detailBatches is 1 there since the window is small.
+async function fetchFromLdbws(apiKey, from, to, { timeOffset: startOffset = 0, timeWindow = null, detailBatches = 2 } = {}) {
+  const data = await fetchLdbwsBoard(apiKey, 'GetDepartureBoard', from, 'to', to, 20, startOffset, timeWindow);
   const trainServices = data.trainServices || [];
 
   if (!trainServices.length && !data.generatedAt) {
@@ -110,12 +114,12 @@ async function fetchFromLdbws(apiKey, from, to) {
   }
 
   const arrivalTimes = {};
-  let timeOffset = 0;
+  let timeOffset = startOffset;
 
-  for (let batch = 0; batch < 2; batch++) {
+  for (let batch = 0; batch < detailBatches; batch++) {
     let detailedServices;
     try {
-      const detailedData = await fetchLdbwsBoard(apiKey, 'GetDepBoardWithDetails', from, 'to', to, 9, timeOffset);
+      const detailedData = await fetchLdbwsBoard(apiKey, 'GetDepBoardWithDetails', from, 'to', to, 9, timeOffset, timeWindow);
       detailedServices = detailedData.trainServices || [];
     } catch {
       break;
@@ -137,14 +141,15 @@ async function fetchFromLdbws(apiKey, from, to) {
   return dedupeAndMap(trainServices, arrivalTimes);
 }
 
-async function fetchHuxleyBoard(kind, crs, filterType, filterCrs, attempt = 1) {
-  const url = `${HUXLEY_BASE}/${kind}/${crs}/${filterType}/${filterCrs}?numRows=20`;
+async function fetchHuxleyBoard(kind, crs, filterType, filterCrs, { timeOffset = 0, timeWindow = null } = {}, attempt = 1) {
+  let url = `${HUXLEY_BASE}/${kind}/${crs}/${filterType}/${filterCrs}?numRows=20&timeOffset=${timeOffset}`;
+  if (timeWindow != null) url += `&timeWindow=${timeWindow}`;
   const res = await fetchWithTimeout(url, {}, 8000);
 
   if (!res.ok) {
     if (res.status >= 500 && attempt < 3) {
       await new Promise((resolve) => setTimeout(resolve, 500 * attempt));
-      return fetchHuxleyBoard(kind, crs, filterType, filterCrs, attempt + 1);
+      return fetchHuxleyBoard(kind, crs, filterType, filterCrs, { timeOffset, timeWindow }, attempt + 1);
     }
     throw new Error(`Huxley2 ${kind} error ${res.status}`);
   }
@@ -152,8 +157,8 @@ async function fetchHuxleyBoard(kind, crs, filterType, filterCrs, attempt = 1) {
   return res.json();
 }
 
-async function fetchFromHuxley(from, to) {
-  const data = await fetchHuxleyBoard('departures', from, 'to', to);
+async function fetchFromHuxley(from, to, options = {}) {
+  const data = await fetchHuxleyBoard('departures', from, 'to', to, options);
   const trainServices = data.trainServices || [];
 
   if (!trainServices.length && !data.generatedAt) {
@@ -187,6 +192,11 @@ export default {
     const url = new URL(request.url);
     const from = (url.searchParams.get('from') || '').toUpperCase();
     const to = (url.searchParams.get('to') || '').toUpperCase();
+    // ?earlier=1 returns only the trains that departed in the last 50
+    // minutes, for the board's "Earlier trains" toggle.
+    const boardOptions = url.searchParams.get('earlier') === '1'
+      ? { timeOffset: -50, timeWindow: 50, detailBatches: 1 }
+      : {};
 
     if (!VALID_CRS.has(from) || !VALID_CRS.has(to) || from === to) {
       return new Response(JSON.stringify({ error: 'Invalid or missing from/to station codes.' }), {
@@ -199,11 +209,11 @@ export default {
     let source;
 
     try {
-      services = await fetchFromLdbws(env.CONSUMER_KEY, from, to);
+      services = await fetchFromLdbws(env.CONSUMER_KEY, from, to, boardOptions);
       source = 'ldbws';
     } catch (ldbwsErr) {
       try {
-        services = await fetchFromHuxley(from, to);
+        services = await fetchFromHuxley(from, to, boardOptions);
         source = 'huxley2';
       } catch (huxleyErr) {
         return new Response(

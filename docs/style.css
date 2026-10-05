@@ -177,6 +177,40 @@ button {
   color: var(--muted);
 }
 
+.earlier-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  margin: 0 0 10px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 400;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.earlier-btn svg {
+  transition: transform 0.2s ease;
+}
+
+.earlier-btn.open svg {
+  transform: rotate(180deg);
+}
+
+.earlier-row td {
+  color: var(--muted);
+}
+
+.earlier-row .platform {
+  color: var(--muted);
+}
+
 .cancelled-row td {
   text-decoration: line-through;
   font-style: italic;
