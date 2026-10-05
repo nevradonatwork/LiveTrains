@@ -17,6 +17,11 @@ const { stations: STATIONS, defaultFrom, defaultTo, dataPath } = window.BOARD_CO
 let from = defaultFrom;
 let to = defaultTo;
 let refreshTimer = null;
+// "Earlier trains" toggle: off by default so the initial load stays as
+// fast as before; when on, trains that left in the last 50 minutes are
+// fetched separately and shown above the upcoming ones.
+let showEarlier = false;
+const EARLIER_WINDOW_MINUTES = 50;
 
 const boardBody = document.getElementById('board-body');
 const routeTitle = document.getElementById('route-title');
@@ -26,6 +31,7 @@ const swapBtn = document.getElementById('swap-btn');
 const refreshBtn = document.getElementById('refresh-btn');
 const fromRow = document.getElementById('station-from');
 const toRow = document.getElementById('station-to');
+const earlierBtn = document.getElementById('earlier-btn');
 
 function setStatus(message, isError) {
   statusEl.textContent = message || '';
@@ -73,6 +79,23 @@ function isUpcoming(service) {
   return scheduled.getTime() > now.getTime() - 60000;
 }
 
+// True for a train that has already left, but within the last `minutes`.
+function departedWithin(service, minutes) {
+  const [hours, mins] = service.scheduledTime.split(':').map(Number);
+  const now = new Date();
+  const scheduled = new Date(now);
+  scheduled.setHours(hours, mins, 0, 0);
+
+  // Just after midnight, a train scheduled late "yesterday" is still
+  // a recent departure rather than one many hours in the future.
+  if (scheduled.getTime() - now.getTime() > 12 * 60 * 60 * 1000) {
+    scheduled.setDate(scheduled.getDate() - 1);
+  }
+
+  const ago = now.getTime() - scheduled.getTime();
+  return ago >= 0 && ago <= minutes * 60000;
+}
+
 function renderStations() {
   const fromStation = STATIONS[from];
   const toStation = STATIONS[to];
@@ -104,6 +127,22 @@ async function loadLive() {
   return { generatedAt: data.generatedAt, services: data.services || [] };
 }
 
+// Only the live Worker can look back in time (the static JSON file only
+// ever holds upcoming trains), so there's no fallback here: if it fails
+// the earlier section is simply left empty.
+async function loadEarlier() {
+  if (!WORKER_URL) return [];
+
+  const res = await fetch(`${WORKER_URL}?from=${from}&to=${to}&earlier=1`, { cache: 'no-store' });
+
+  if (!res.ok) {
+    throw new Error(`Live proxy error (${res.status})`);
+  }
+
+  const data = await res.json();
+  return (data.services || []).filter((s) => departedWithin(s, EARLIER_WINDOW_MINUTES));
+}
+
 async function loadFromStaticFile() {
   const res = await fetch(`${dataPath}?_=${Date.now()}`);
 
@@ -124,23 +163,48 @@ async function loadDepartures() {
     const { generatedAt, services: rawServices } = WORKER_URL ? await loadLive().catch(loadFromStaticFile) : await loadFromStaticFile();
     const services = rawServices.filter(isUpcoming);
 
-    renderBoard(services);
+    let earlier = [];
+    let earlierFailed = false;
+    if (showEarlier) {
+      try {
+        earlier = await loadEarlier();
+      } catch {
+        earlierFailed = true;
+      }
+    }
+
+    renderBoard(services, earlier);
 
     lastUpdatedEl.textContent = generatedAt
       ? `Last updated: ${new Date(generatedAt).toLocaleTimeString('en-GB')}`
       : 'Waiting for the first data update…';
-    setStatus(services.length ? '' : 'No scheduled services found right now.');
+
+    if (!services.length) {
+      setStatus('No scheduled services found right now.');
+    } else if (earlierFailed) {
+      setStatus('Earlier trains are not available right now.');
+    } else if (showEarlier && !earlier.length) {
+      setStatus(`No trains left in the last ${EARLIER_WINDOW_MINUTES} minutes.`);
+    } else {
+      setStatus('');
+    }
   } catch (err) {
     setStatus(`Could not load departures: ${err.message}`, true);
   }
 }
 
-function renderBoard(services) {
+function renderBoard(services, earlier = []) {
   boardBody.innerHTML = '';
 
-  services.forEach((s) => {
+  const rows = [
+    ...earlier.map((s) => ({ service: s, earlier: true })),
+    ...services.map((s) => ({ service: s, earlier: false })),
+  ];
+
+  rows.forEach(({ service: s, earlier: isEarlier }) => {
     const row = document.createElement('tr');
     row.classList.toggle('cancelled-row', !!s.isCancelled);
+    row.classList.toggle('earlier-row', isEarlier);
 
     row.innerHTML = `
       <td>${s.scheduledTime}</td>
@@ -159,8 +223,20 @@ function scheduleAutoRefresh() {
   refreshTimer = setInterval(loadDepartures, 60000);
 }
 
+function setEarlier(on) {
+  showEarlier = on;
+  earlierBtn.classList.toggle('open', on);
+  earlierBtn.setAttribute('aria-expanded', String(on));
+}
+
 swapBtn.addEventListener('click', () => {
   [from, to] = [to, from];
+  setEarlier(false);
+  loadDepartures();
+});
+
+earlierBtn.addEventListener('click', () => {
+  setEarlier(!showEarlier);
   loadDepartures();
 });
 
