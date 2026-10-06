@@ -199,6 +199,15 @@ button {
   transition: transform 0.2s ease;
 }
 
+.later-btn {
+  margin: 10px 0 0;
+}
+
+.earlier-btn[disabled] {
+  opacity: 0.55;
+  cursor: default;
+}
+
 .earlier-btn.open svg {
   transform: rotate(180deg);
 }
