@@ -22,6 +22,13 @@ let refreshTimer = null;
 // fetched separately and shown above the upcoming ones.
 let showEarlier = false;
 const EARLIER_WINDOW_MINUTES = 50;
+// "Later trains": each click appends the next batch of trains after the
+// last one shown. LDBWS only looks up to 120 minutes ahead, so the button
+// disables itself once that limit (or the end of the data) is reached.
+let laterServices = [];
+let laterExhausted = false;
+let displayedUpcoming = [];
+const LATER_MAX_OFFSET_MINUTES = 120;
 
 const boardBody = document.getElementById('board-body');
 const routeTitle = document.getElementById('route-title');
@@ -32,6 +39,8 @@ const refreshBtn = document.getElementById('refresh-btn');
 const fromRow = document.getElementById('station-from');
 const toRow = document.getElementById('station-to');
 const earlierBtn = document.getElementById('earlier-btn');
+const laterBtn = document.getElementById('later-btn');
+const laterLabel = laterBtn.querySelector('span');
 
 function setStatus(message, isError) {
   statusEl.textContent = message || '';
@@ -63,7 +72,7 @@ function formatDuration(service) {
 // time is more than a minute in the past by the viewer's own clock,
 // so the board only ever shows upcoming/due trains regardless of how
 // stale the underlying fetch is.
-function isUpcoming(service) {
+function minutesUntil(service) {
   const [hours, mins] = service.scheduledTime.split(':').map(Number);
   const now = new Date();
   const scheduled = new Date(now);
@@ -76,7 +85,11 @@ function isUpcoming(service) {
     scheduled.setDate(scheduled.getDate() + 1);
   }
 
-  return scheduled.getTime() > now.getTime() - 60000;
+  return (scheduled.getTime() - now.getTime()) / 60000;
+}
+
+function isUpcoming(service) {
+  return minutesUntil(service) > -1;
 }
 
 // True for a train that has already left, but within the last `minutes`.
@@ -143,6 +156,50 @@ async function loadEarlier() {
   return (data.services || []).filter((s) => departedWithin(s, EARLIER_WINDOW_MINUTES));
 }
 
+// Appended "later" trains survive the 60s auto-refresh: the fresh base
+// list moves forward in time, so keep only the appended ones that are
+// still after its last train (and haven't departed).
+function mergedLater(base) {
+  if (!base.length || !laterServices.length) return [];
+  const lastMin = minutesUntil(base[base.length - 1]);
+  return laterServices.filter((s) => isUpcoming(s) && minutesUntil(s) > lastMin);
+}
+
+async function loadLater(lastShown) {
+  const nextOffset = Math.ceil(minutesUntil(lastShown)) + 1;
+  if (!WORKER_URL || nextOffset > LATER_MAX_OFFSET_MINUTES) {
+    laterExhausted = true;
+    return;
+  }
+
+  const res = await fetch(`${WORKER_URL}?from=${from}&to=${to}&offset=${nextOffset}`, { cache: 'no-store' });
+
+  if (!res.ok) {
+    throw new Error(`Live proxy error (${res.status})`);
+  }
+
+  const data = await res.json();
+  const lastMin = minutesUntil(lastShown);
+  const fresh = (data.services || []).filter((s) => isUpcoming(s) && minutesUntil(s) > lastMin);
+
+  if (!fresh.length) {
+    laterExhausted = true;
+    return;
+  }
+
+  laterServices = [...laterServices, ...fresh];
+}
+
+function updateLaterButton() {
+  laterBtn.disabled = laterExhausted || !displayedUpcoming.length;
+  laterLabel.textContent = laterExhausted ? 'No later trains' : 'Later trains';
+}
+
+function resetLater() {
+  laterServices = [];
+  laterExhausted = false;
+}
+
 async function loadFromStaticFile() {
   const res = await fetch(`${dataPath}?_=${Date.now()}`);
 
@@ -173,7 +230,10 @@ async function loadDepartures() {
       }
     }
 
-    renderBoard(services, earlier);
+    const later = mergedLater(services);
+    displayedUpcoming = [...services, ...later];
+    renderBoard(services, earlier, later);
+    updateLaterButton();
 
     lastUpdatedEl.textContent = generatedAt
       ? `Last updated: ${new Date(generatedAt).toLocaleTimeString('en-GB')}`
@@ -193,12 +253,13 @@ async function loadDepartures() {
   }
 }
 
-function renderBoard(services, earlier = []) {
+function renderBoard(services, earlier = [], later = []) {
   boardBody.innerHTML = '';
 
   const rows = [
     ...earlier.map((s) => ({ service: s, earlier: true })),
     ...services.map((s) => ({ service: s, earlier: false })),
+    ...later.map((s) => ({ service: s, earlier: false })),
   ];
 
   rows.forEach(({ service: s, earlier: isEarlier }) => {
@@ -232,12 +293,31 @@ function setEarlier(on) {
 swapBtn.addEventListener('click', () => {
   [from, to] = [to, from];
   setEarlier(false);
+  resetLater();
   loadDepartures();
 });
 
 earlierBtn.addEventListener('click', () => {
   setEarlier(!showEarlier);
   loadDepartures();
+});
+
+laterBtn.addEventListener('click', async () => {
+  const lastShown = displayedUpcoming[displayedUpcoming.length - 1];
+  if (laterExhausted || !lastShown) return;
+
+  laterBtn.disabled = true;
+  laterLabel.textContent = 'Loading…';
+
+  let failed = false;
+  try {
+    await loadLater(lastShown);
+  } catch {
+    failed = true;
+  }
+
+  await loadDepartures();
+  if (failed) setStatus('Later trains are not available right now.');
 });
 
 refreshBtn.addEventListener('click', loadDepartures);

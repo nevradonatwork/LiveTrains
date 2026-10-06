@@ -193,10 +193,16 @@ export default {
     const from = (url.searchParams.get('from') || '').toUpperCase();
     const to = (url.searchParams.get('to') || '').toUpperCase();
     // ?earlier=1 returns only the trains that departed in the last 50
-    // minutes, for the board's "Earlier trains" toggle.
-    const boardOptions = url.searchParams.get('earlier') === '1'
-      ? { timeOffset: -50, timeWindow: 50, detailBatches: 1 }
-      : {};
+    // minutes, for the board's "Earlier trains" toggle. ?offset=N (1-120,
+    // minutes ahead) starts the board N minutes from now, for "Later
+    // trains"; LDBWS caps timeOffset at 120.
+    const offset = parseInt(url.searchParams.get('offset') || '', 10);
+    let boardOptions = {};
+    if (url.searchParams.get('earlier') === '1') {
+      boardOptions = { timeOffset: -50, timeWindow: 50, detailBatches: 1 };
+    } else if (Number.isInteger(offset) && offset > 0 && offset <= 120) {
+      boardOptions = { timeOffset: offset, detailBatches: 1 };
+    }
 
     if (!VALID_CRS.has(from) || !VALID_CRS.has(to) || from === to) {
       return new Response(JSON.stringify({ error: 'Invalid or missing from/to station codes.' }), {
