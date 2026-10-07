@@ -1,25 +1,25 @@
 {
-  "generatedAt": "2026-10-06T22:59:42.797Z",
+  "generatedAt": "2026-10-07T02:16:51.007Z",
   "routes": {
     "NEM-WAT": {
-      "services": []
-    },
-    "WAT-NEM": {
       "services": [
         {
-          "scheduledTime": "00:12",
+          "scheduledTime": "05:09",
           "expectedTime": "On time",
-          "platform": "2",
+          "platform": "1",
           "operator": "South Western Railway",
-          "durationMinutes": 22,
+          "durationMinutes": 25,
           "isCancelled": false
         }
       ]
     },
+    "WAT-NEM": {
+      "services": []
+    },
     "NEM-RAY": {
       "services": [
         {
-          "scheduledTime": "00:17",
+          "scheduledTime": "05:09",
           "expectedTime": "On time",
           "platform": "1",
           "operator": "South Western Railway",
@@ -29,47 +29,22 @@
       ]
     },
     "RAY-NEM": {
-      "services": [
-        {
-          "scheduledTime": "00:16",
-          "expectedTime": "On time",
-          "platform": "3",
-          "operator": "South Western Railway",
-          "durationMinutes": 3,
-          "isCancelled": false
-        },
-        {
-          "scheduledTime": "00:31",
-          "expectedTime": "On time",
-          "platform": "3",
-          "operator": "South Western Railway",
-          "durationMinutes": 3,
-          "isCancelled": false
-        }
-      ]
-    },
-    "NEM-VXH": {
       "services": []
     },
-    "VXH-NEM": {
+    "NEM-VXH": {
       "services": [
         {
-          "scheduledTime": "00:01",
+          "scheduledTime": "05:09",
           "expectedTime": "On time",
-          "platform": "8",
+          "platform": "1",
           "operator": "South Western Railway",
-          "durationMinutes": 18,
-          "isCancelled": false
-        },
-        {
-          "scheduledTime": "00:16",
-          "expectedTime": "On time",
-          "platform": "8",
-          "operator": "South Western Railway",
-          "durationMinutes": 18,
+          "durationMinutes": 20,
           "isCancelled": false
         }
       ]
+    },
+    "VXH-NEM": {
+      "services": []
     }
   }
 }
