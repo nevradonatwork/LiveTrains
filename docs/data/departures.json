@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-10-09T23:18:13.458Z",
+  "generatedAt": "2026-10-10T02:27:41.114Z",
   "routes": {
     "NEM-WAT": {
       "services": [
         {
-          "scheduledTime": "00:22",
+          "scheduledTime": "05:10",
           "expectedTime": "On time",
-          "platform": "1",
+          "platform": "TBC",
           "operator": "South Western Railway",
           "durationMinutes": 25,
           "isCancelled": false
@@ -16,19 +16,11 @@
     "WAT-NEM": {
       "services": [
         {
-          "scheduledTime": "00:37",
-          "expectedTime": "00:58",
-          "platform": "TBC",
-          "operator": "South Western Railway",
-          "durationMinutes": 25,
-          "isCancelled": false
-        },
-        {
-          "scheduledTime": "00:42",
+          "scheduledTime": "05:12",
           "expectedTime": "On time",
           "platform": "TBC",
           "operator": "South Western Railway",
-          "durationMinutes": 25,
+          "durationMinutes": 22,
           "isCancelled": false
         }
       ]
@@ -36,73 +28,24 @@
     "NEM-RAY": {
       "services": [
         {
-          "scheduledTime": "00:17",
+          "scheduledTime": "05:10",
           "expectedTime": "On time",
-          "platform": "1",
+          "platform": "TBC",
           "operator": "South Western Railway",
           "durationMinutes": 3,
-          "isCancelled": false
-        },
-        {
-          "scheduledTime": "00:22",
-          "expectedTime": "On time",
-          "platform": "1",
-          "operator": "South Western Railway",
-          "durationMinutes": 4,
           "isCancelled": false
         }
       ]
     },
     "RAY-NEM": {
-      "services": [
-        {
-          "scheduledTime": "23:55",
-          "expectedTime": "Delayed",
-          "platform": "TBC",
-          "operator": "South Western Railway",
-          "durationMinutes": 3,
-          "isCancelled": false
-        },
-        {
-          "scheduledTime": "00:01",
-          "expectedTime": "00:16",
-          "platform": "3",
-          "operator": "South Western Railway",
-          "durationMinutes": 3,
-          "isCancelled": false
-        },
-        {
-          "scheduledTime": "00:31",
-          "expectedTime": "On time",
-          "platform": "3",
-          "operator": "South Western Railway",
-          "durationMinutes": 3,
-          "isCancelled": false
-        },
-        {
-          "scheduledTime": "00:59",
-          "expectedTime": "01:16",
-          "platform": "3",
-          "operator": "South Western Railway",
-          "durationMinutes": 3,
-          "isCancelled": false
-        },
-        {
-          "scheduledTime": "01:04",
-          "expectedTime": "On time",
-          "platform": "3",
-          "operator": "South Western Railway",
-          "durationMinutes": 3,
-          "isCancelled": false
-        }
-      ]
+      "services": []
     },
     "NEM-VXH": {
       "services": [
         {
-          "scheduledTime": "00:22",
+          "scheduledTime": "05:10",
           "expectedTime": "On time",
-          "platform": "1",
+          "platform": "TBC",
           "operator": "South Western Railway",
           "durationMinutes": 20,
           "isCancelled": false
@@ -112,27 +55,11 @@
     "VXH-NEM": {
       "services": [
         {
-          "scheduledTime": "00:16",
+          "scheduledTime": "05:16",
           "expectedTime": "On time",
-          "platform": "8",
+          "platform": "TBC",
           "operator": "South Western Railway",
           "durationMinutes": 18,
-          "isCancelled": false
-        },
-        {
-          "scheduledTime": "00:41",
-          "expectedTime": "01:01",
-          "platform": "8",
-          "operator": "South Western Railway",
-          "durationMinutes": 21,
-          "isCancelled": false
-        },
-        {
-          "scheduledTime": "00:46",
-          "expectedTime": "On time",
-          "platform": "8",
-          "operator": "South Western Railway",
-          "durationMinutes": 21,
           "isCancelled": false
         }
       ]
