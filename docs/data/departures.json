@@ -1,23 +1,477 @@
 {
-  "generatedAt": "2026-10-11T01:19:18.352Z",
+  "generatedAt": "2026-10-11T07:27:21.311Z",
   "routes": {
     "NEM-WAT": {
-      "services": []
+      "services": [
+        {
+          "scheduledTime": "08:40",
+          "expectedTime": "08:42",
+          "platform": "1",
+          "operator": "South Western Railway",
+          "durationMinutes": 26,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "08:40",
+          "expectedTime": "On time",
+          "platform": "4",
+          "operator": "South Western Railway",
+          "durationMinutes": null,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "08:48",
+          "expectedTime": "On time",
+          "platform": "1",
+          "operator": "South Western Railway",
+          "durationMinutes": 23,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "09:10",
+          "expectedTime": "On time",
+          "platform": "1",
+          "operator": "South Western Railway",
+          "durationMinutes": 26,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "09:18",
+          "expectedTime": "On time",
+          "platform": "1",
+          "operator": "South Western Railway",
+          "durationMinutes": 24,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "09:40",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 28,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "09:40",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": null,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "09:48",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 25,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "10:10",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 24,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "10:18",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 25,
+          "isCancelled": false
+        }
+      ]
     },
     "WAT-NEM": {
-      "services": []
+      "services": [
+        {
+          "scheduledTime": "08:27",
+          "expectedTime": "On time",
+          "platform": "1",
+          "operator": "South Western Railway",
+          "durationMinutes": 22,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "08:48",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 22,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "08:57",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 23,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "09:17",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": null,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "09:18",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 22,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "09:27",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 22,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "09:48",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 22,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "09:57",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 23,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "10:14",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": null,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "10:18",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 22,
+          "isCancelled": false
+        }
+      ]
     },
     "NEM-RAY": {
-      "services": []
+      "services": [
+        {
+          "scheduledTime": "08:40",
+          "expectedTime": "08:42",
+          "platform": "1",
+          "operator": "South Western Railway",
+          "durationMinutes": 3,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "08:48",
+          "expectedTime": "On time",
+          "platform": "1",
+          "operator": "South Western Railway",
+          "durationMinutes": 2,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "09:10",
+          "expectedTime": "On time",
+          "platform": "1",
+          "operator": "South Western Railway",
+          "durationMinutes": 3,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "09:18",
+          "expectedTime": "On time",
+          "platform": "1",
+          "operator": "South Western Railway",
+          "durationMinutes": 3,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "09:40",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 3,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "09:48",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 3,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "10:10",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 3,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "10:18",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 3,
+          "isCancelled": false
+        }
+      ]
     },
     "RAY-NEM": {
-      "services": []
+      "services": [
+        {
+          "scheduledTime": "08:37",
+          "expectedTime": "On time",
+          "platform": "3",
+          "operator": "South Western Railway",
+          "durationMinutes": 3,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "08:46",
+          "expectedTime": "On time",
+          "platform": "3",
+          "operator": "South Western Railway",
+          "durationMinutes": 3,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "09:07",
+          "expectedTime": "On time",
+          "platform": "3",
+          "operator": "South Western Railway",
+          "durationMinutes": 3,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "09:17",
+          "expectedTime": "On time",
+          "platform": "3",
+          "operator": "South Western Railway",
+          "durationMinutes": 3,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "09:37",
+          "expectedTime": "On time",
+          "platform": "3",
+          "operator": "South Western Railway",
+          "durationMinutes": 3,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "09:46",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 3,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "10:07",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 3,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "10:17",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 3,
+          "isCancelled": false
+        }
+      ]
     },
     "NEM-VXH": {
-      "services": []
+      "services": [
+        {
+          "scheduledTime": "08:40",
+          "expectedTime": "08:42",
+          "platform": "1",
+          "operator": "South Western Railway",
+          "durationMinutes": 19,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "08:40",
+          "expectedTime": "On time",
+          "platform": "4",
+          "operator": "South Western Railway",
+          "durationMinutes": null,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "08:48",
+          "expectedTime": "On time",
+          "platform": "1",
+          "operator": "South Western Railway",
+          "durationMinutes": 18,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "09:10",
+          "expectedTime": "On time",
+          "platform": "1",
+          "operator": "South Western Railway",
+          "durationMinutes": 21,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "09:18",
+          "expectedTime": "On time",
+          "platform": "1",
+          "operator": "South Western Railway",
+          "durationMinutes": 19,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "09:40",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 21,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "09:40",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": null,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "09:48",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 19,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "10:10",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 19,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "10:18",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 19,
+          "isCancelled": false
+        }
+      ]
     },
     "VXH-NEM": {
-      "services": []
+      "services": [
+        {
+          "scheduledTime": "08:31",
+          "expectedTime": "On time",
+          "platform": "8",
+          "operator": "South Western Railway",
+          "durationMinutes": 18,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "08:52",
+          "expectedTime": "On time",
+          "platform": "8",
+          "operator": "South Western Railway",
+          "durationMinutes": 18,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "09:01",
+          "expectedTime": "On time",
+          "platform": "8",
+          "operator": "South Western Railway",
+          "durationMinutes": 19,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "09:21",
+          "expectedTime": "On time",
+          "platform": "3",
+          "operator": "South Western Railway",
+          "durationMinutes": null,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "09:22",
+          "expectedTime": "On time",
+          "platform": "8",
+          "operator": "South Western Railway",
+          "durationMinutes": 18,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "09:31",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 18,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "09:52",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 18,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "10:01",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 19,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "10:18",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": null,
+          "isCancelled": false
+        },
+        {
+          "scheduledTime": "10:22",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 18,
+          "isCancelled": false
+        }
+      ]
     }
   }
 }
