@@ -1,83 +1,23 @@
 {
-  "generatedAt": "2026-10-11T22:50:29.459Z",
+  "generatedAt": "2026-10-12T01:58:58.477Z",
   "routes": {
     "NEM-WAT": {
       "services": []
     },
     "WAT-NEM": {
-      "services": [
-        {
-          "scheduledTime": "00:01",
-          "expectedTime": "On time",
-          "platform": "3",
-          "operator": "South Western Railway",
-          "durationMinutes": 22,
-          "isCancelled": false
-        },
-        {
-          "scheduledTime": "00:12",
-          "expectedTime": "On time",
-          "platform": "TBC",
-          "operator": "South Western Railway",
-          "durationMinutes": 20,
-          "isCancelled": false
-        }
-      ]
+      "services": []
     },
     "NEM-RAY": {
-      "services": [
-        {
-          "scheduledTime": "23:58",
-          "expectedTime": "On time",
-          "platform": "1",
-          "operator": "South Western Railway",
-          "durationMinutes": 3,
-          "isCancelled": false
-        }
-      ]
+      "services": []
     },
     "RAY-NEM": {
-      "services": [
-        {
-          "scheduledTime": "00:20",
-          "expectedTime": "On time",
-          "platform": "3",
-          "operator": "South Western Railway",
-          "durationMinutes": 3,
-          "isCancelled": false
-        },
-        {
-          "scheduledTime": "00:30",
-          "expectedTime": "On time",
-          "platform": "3",
-          "operator": "South Western Railway",
-          "durationMinutes": 2,
-          "isCancelled": false
-        }
-      ]
+      "services": []
     },
     "NEM-VXH": {
       "services": []
     },
     "VXH-NEM": {
-      "services": [
-        {
-          "scheduledTime": "00:05",
-          "expectedTime": "On time",
-          "platform": "8",
-          "operator": "South Western Railway",
-          "durationMinutes": 18,
-          "isCancelled": false
-        },
-        {
-          "scheduledTime": "00:16",
-          "expectedTime": "On time",
-          "platform": "8",
-          "operator": "South Western Railway",
-          "durationMinutes": 16,
-          "isCancelled": false
-        }
-      ]
+      "services": []
     }
   }
 }
