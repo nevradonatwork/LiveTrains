@@ -1,74 +1,23 @@
 {
-  "generatedAt": "2026-10-16T23:35:01.336Z",
+  "generatedAt": "2026-10-17T01:32:17.508Z",
   "routes": {
     "NEM-WAT": {
       "services": []
     },
     "WAT-NEM": {
-      "services": [
-        {
-          "scheduledTime": "00:37",
-          "expectedTime": "On time",
-          "platform": "TBC",
-          "operator": "South Western Railway",
-          "durationMinutes": 25,
-          "isCancelled": false
-        },
-        {
-          "scheduledTime": "00:42",
-          "expectedTime": "On time",
-          "platform": "TBC",
-          "operator": "South Western Railway",
-          "durationMinutes": 25,
-          "isCancelled": false
-        }
-      ]
+      "services": []
     },
     "NEM-RAY": {
       "services": []
     },
     "RAY-NEM": {
-      "services": [
-        {
-          "scheduledTime": "00:59",
-          "expectedTime": "On time",
-          "platform": "TBC",
-          "operator": "South Western Railway",
-          "durationMinutes": 3,
-          "isCancelled": false
-        },
-        {
-          "scheduledTime": "01:04",
-          "expectedTime": "On time",
-          "platform": "TBC",
-          "operator": "South Western Railway",
-          "durationMinutes": 3,
-          "isCancelled": false
-        }
-      ]
+      "services": []
     },
     "NEM-VXH": {
       "services": []
     },
     "VXH-NEM": {
-      "services": [
-        {
-          "scheduledTime": "00:41",
-          "expectedTime": "On time",
-          "platform": "TBC",
-          "operator": "South Western Railway",
-          "durationMinutes": 21,
-          "isCancelled": false
-        },
-        {
-          "scheduledTime": "00:46",
-          "expectedTime": "On time",
-          "platform": "TBC",
-          "operator": "South Western Railway",
-          "durationMinutes": 21,
-          "isCancelled": false
-        }
-      ]
+      "services": []
     }
   }
 }
