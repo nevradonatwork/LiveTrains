@@ -51,6 +51,7 @@ function etdClass(etd) {
   if (!etd) return '';
   const value = etd.toLowerCase();
   if (value.includes('cancel')) return 'cancelled';
+  if (value.includes('not stopping')) return 'cancelled';
   if (value.includes('on time')) return 'on-time';
   if (value.includes('delay')) return 'delayed';
   if (value.includes('no report')) return 'no-report';
@@ -62,8 +63,18 @@ function etdClass(etd) {
 }
 
 function formatDuration(service) {
-  if (service.isCancelled || service.durationMinutes == null) return '—';
+  if (service.isCancelled || service.notStopping || service.durationMinutes == null) return '—';
   return `${service.durationMinutes}m`;
+}
+
+// What the Expected column says. A service whose call at our destination
+// is cancelled still runs (and still appears on the filtered board), but
+// won't stop where the viewer wants to get off, so it's flagged as
+// prominently as a cancellation.
+function expectedLabel(service) {
+  if (service.isCancelled) return 'Cancelled';
+  if (service.notStopping) return 'Not stopping';
+  return service.expectedTime;
 }
 
 // The backing data file only refreshes every few minutes (and can lag
@@ -264,12 +275,12 @@ function renderBoard(services, earlier = [], later = []) {
 
   rows.forEach(({ service: s, earlier: isEarlier }) => {
     const row = document.createElement('tr');
-    row.classList.toggle('cancelled-row', !!s.isCancelled);
+    row.classList.toggle('cancelled-row', !!s.isCancelled || !!s.notStopping);
     row.classList.toggle('earlier-row', isEarlier);
 
     row.innerHTML = `
       <td>${s.scheduledTime}</td>
-      <td class="${etdClass(s.isCancelled ? 'Cancelled' : s.expectedTime)}">${s.isCancelled ? 'Cancelled' : s.expectedTime}</td>
+      <td class="${etdClass(expectedLabel(s))}">${expectedLabel(s)}</td>
       <td class="platform">${s.platform}</td>
       <td>${formatDuration(s)}</td>
       <td>${s.operator || ''}</td>
