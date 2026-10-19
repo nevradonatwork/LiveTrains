@@ -69,7 +69,7 @@ async function fetchLdbwsBoard(endpoint, crs, filterType, filterCrs, numRows, ti
 function findArrivalTime(service, destinationCrs) {
   for (const list of service.subsequentCallingPoints || []) {
     for (const point of list.callingPoint || []) {
-      if (point.crs === destinationCrs) return point.st;
+      if (point.crs === destinationCrs) return point.isCancelled ? null : point.st;
     }
   }
   return null;
@@ -94,6 +94,9 @@ function dedupeAndMap(trainServices, arrivalTimes) {
       operator: s.operator,
       durationMinutes: arrivalTime ? journeyMinutes(s.std, arrivalTime) : null,
       isCancelled: !!s.isCancelled,
+      // The service runs, but its call at the filter station (our
+      // destination) is cancelled - it will pass through without stopping.
+      notStopping: !!s.filterLocationCancelled,
     };
   });
 }
