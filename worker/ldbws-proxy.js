@@ -80,10 +80,55 @@ function findArrivalTime(service, destinationCrs) {
   return null;
 }
 
-function dedupeAndMap(trainServices, arrivalTimes) {
+// True when the service's known calling points include `crs` (whether or
+// not that call is cancelled). Only meaningful for services from the
+// "WithDetails" endpoints.
+function callsAt(service, crs) {
+  for (const list of service.subsequentCallingPoints || []) {
+    for (const point of list.callingPoint || []) {
+      if (point.crs === crs) return true;
+    }
+  }
+  return false;
+}
+
+// "Shepperton", or "London Waterloo via Richmond" when Darwin gives a via.
+function destinationLabel(service) {
+  const places = (service.destination || [])
+    .map((d) => (d.via ? `${d.locationName} ${d.via}` : d.locationName))
+    .filter(Boolean);
+  return places.join(' & ') || null;
+}
+
+// Station-level disruption notices (strikes, line closures, ...). Darwin
+// sends them as HTML snippets; keep just the text.
+function boardMessages(data) {
+  const seen = new Set();
+  const messages = [];
+  for (const m of data.nrccMessages || []) {
+    const raw = typeof m === 'string' ? m : (m && (m.value || m.message)) || '';
+    const text = raw
+      .replace(/<\/?(?:p|br|li|div)\b[^>]*>/gi, ' ')
+      .replace(/<[^>]+>/g, '')
+      .replace(/&amp;/g, '&')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (text && !seen.has(text)) {
+      seen.add(text);
+      messages.push(text);
+    }
+  }
+  return messages;
+}
+
+function dedupeAndMap(trainServices, arrivalTimes, skip = new Set()) {
   const seenServiceIDs = new Set();
   const uniqueServices = trainServices.filter((s) => {
     if (!s.serviceID) return true;
+    if (skip.has(s.serviceID)) return false;
     if (seenServiceIDs.has(s.serviceID)) return false;
     seenServiceIDs.add(s.serviceID);
     return true;
@@ -101,6 +146,11 @@ function dedupeAndMap(trainServices, arrivalTimes) {
       // The service runs, but its call at the filter station (our
       // destination) is cancelled - it will pass through without stopping.
       notStopping: !!s.filterLocationCancelled,
+      destination: destinationLabel(s),
+      // Darwin's free-text explanations, e.g. "This train has been
+      // cancelled because of a fault with the signalling system".
+      cancelReason: s.cancelReason || null,
+      delayReason: s.delayReason || null,
     };
   });
 }
@@ -117,6 +167,7 @@ async function fetchFromLdbws(apiKey, from, to, { timeOffset: startOffset = 0, t
   }
 
   const arrivalTimes = {};
+  const skip = new Set();
   let timeOffset = startOffset;
 
   for (let batch = 0; batch < detailBatches; batch++) {
@@ -130,6 +181,15 @@ async function fetchFromLdbws(apiKey, from, to, { timeOffset: startOffset = 0, t
 
     for (const s of detailedServices) {
       if (!s.serviceID) continue;
+      // Darwin's "to" filter also admits services that only reach the
+      // destination through an onward association rather than as this
+      // service - e.g. Kingston-loop trains advertised as terminating at
+      // Richmond or Teddington, which never call at New Malden / Waterloo
+      // as listed. Their calling points give them away, so drop them.
+      if (!callsAt(s, to)) {
+        skip.add(s.serviceID);
+        continue;
+      }
       const arrivalTime = findArrivalTime(s, to);
       if (arrivalTime) arrivalTimes[s.serviceID] = arrivalTime;
     }
@@ -141,7 +201,7 @@ async function fetchFromLdbws(apiKey, from, to, { timeOffset: startOffset = 0, t
     timeOffset += journeyMinutes(first, last) + 1;
   }
 
-  return dedupeAndMap(trainServices, arrivalTimes);
+  return { services: dedupeAndMap(trainServices, arrivalTimes, skip), messages: boardMessages(data) };
 }
 
 async function fetchHuxleyBoard(kind, crs, filterType, filterCrs, { timeOffset = 0, timeWindow = null } = {}, attempt = 1) {
@@ -178,7 +238,7 @@ async function fetchFromHuxley(from, to, options = {}) {
     // Duration just won't be available this round - not fatal.
   }
 
-  return dedupeAndMap(trainServices, arrivalTimes);
+  return { services: dedupeAndMap(trainServices, arrivalTimes), messages: boardMessages(data) };
 }
 
 const VALID_CRS = new Set(['NEM', 'WAT', 'RAY', 'VXH']);
@@ -214,15 +274,15 @@ export default {
       });
     }
 
-    let services;
+    let board;
     let source;
 
     try {
-      services = await fetchFromLdbws(env.CONSUMER_KEY, from, to, boardOptions);
+      board = await fetchFromLdbws(env.CONSUMER_KEY, from, to, boardOptions);
       source = 'ldbws';
     } catch (ldbwsErr) {
       try {
-        services = await fetchFromHuxley(from, to, boardOptions);
+        board = await fetchFromHuxley(from, to, boardOptions);
         source = 'huxley2';
       } catch (huxleyErr) {
         return new Response(
@@ -232,7 +292,8 @@ export default {
       }
     }
 
-    return new Response(JSON.stringify({ generatedAt: new Date().toISOString(), source, services }), {
+    const { services, messages } = board;
+    return new Response(JSON.stringify({ generatedAt: new Date().toISOString(), source, services, messages }), {
       headers: { ...headers, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
     });
   },

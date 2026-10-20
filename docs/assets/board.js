@@ -38,6 +38,7 @@ const swapBtn = document.getElementById('swap-btn');
 const refreshBtn = document.getElementById('refresh-btn');
 const fromRow = document.getElementById('station-from');
 const toRow = document.getElementById('station-to');
+const noticesEl = document.getElementById('notices');
 const earlierBtn = document.getElementById('earlier-btn');
 const laterBtn = document.getElementById('later-btn');
 const laterLabel = laterBtn.querySelector('span');
@@ -47,9 +48,19 @@ function setStatus(message, isError) {
   statusEl.classList.toggle('error', !!isError);
 }
 
-function etdClass(etd) {
-  if (!etd) return '';
-  const value = etd.toLowerCase();
+function escapeHtml(text) {
+  return String(text).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+}
+
+function toMinutesOfDay(time) {
+  const [hours, mins] = time.split(':').map(Number);
+  return hours * 60 + mins;
+}
+
+function etdClass(service) {
+  const label = expectedLabel(service);
+  if (!label) return '';
+  const value = label.toLowerCase();
   if (value.includes('cancel')) return 'cancelled';
   if (value.includes('not stopping')) return 'cancelled';
   if (value.includes('on time')) return 'on-time';
@@ -58,7 +69,14 @@ function etdClass(etd) {
   // LDBWS reports a delay either as the word "Delayed" or as the new,
   // later expected time (e.g. "12:38") in place of "On time" - both
   // mean the same thing to the viewer, so both get the amber styling.
-  if (/^\d{1,2}:\d{2}$/.test(etd.trim())) return 'delayed';
+  // Occasionally the expected time is *earlier* than the schedule (the
+  // train has been re-timed), which isn't a delay, so it gets its own
+  // colour rather than amber.
+  if (/^\d{1,2}:\d{2}$/.test(label.trim())) {
+    let diff = toMinutesOfDay(label.trim()) - toMinutesOfDay(service.scheduledTime);
+    if (diff < -12 * 60) diff += 24 * 60;
+    return diff < 0 ? 'early' : 'delayed';
+  }
   return '';
 }
 
@@ -148,7 +166,7 @@ async function loadLive() {
   }
 
   const data = await res.json();
-  return { generatedAt: data.generatedAt, services: data.services || [] };
+  return { generatedAt: data.generatedAt, services: data.services || [], messages: data.messages || [] };
 }
 
 // Only the live Worker can look back in time (the static JSON file only
@@ -220,7 +238,7 @@ async function loadFromStaticFile() {
 
   const data = await res.json();
   const route = data.routes && data.routes[`${from}-${to}`];
-  return { generatedAt: data.generatedAt, services: (route && route.services) || [] };
+  return { generatedAt: data.generatedAt, services: (route && route.services) || [], messages: (route && route.messages) || [] };
 }
 
 async function loadDepartures() {
@@ -228,8 +246,9 @@ async function loadDepartures() {
   setStatus('Loading…');
 
   try {
-    const { generatedAt, services: rawServices } = WORKER_URL ? await loadLive().catch(loadFromStaticFile) : await loadFromStaticFile();
+    const { generatedAt, services: rawServices, messages } = WORKER_URL ? await loadLive().catch(loadFromStaticFile) : await loadFromStaticFile();
     const services = rawServices.filter(isUpcoming);
+    renderNotices(messages || []);
 
     let earlier = [];
     let earlierFailed = false;
@@ -264,6 +283,39 @@ async function loadDepartures() {
   }
 }
 
+// Station-level disruption notices from National Rail (strikes, line
+// closures, ...). Long ones are clamped to a few lines; tap to expand.
+function renderNotices(messages) {
+  noticesEl.innerHTML = '';
+  for (const text of messages) {
+    const notice = document.createElement('div');
+    notice.className = 'notice';
+    const body = document.createElement('div');
+    body.className = 'notice-text clamped';
+    body.textContent = text;
+    notice.appendChild(body);
+    notice.addEventListener('click', () => body.classList.toggle('clamped'));
+    noticesEl.appendChild(notice);
+  }
+}
+
+// The small second line under a train: where it's actually heading (only
+// when that isn't simply our destination, e.g. "to Shepperton" on the
+// Waterloo board), plus National Rail's reason for a cancellation or
+// delay when it gives one.
+function detailParts(service) {
+  const parts = [];
+  if (service.destination && service.destination !== STATIONS[to].name) {
+    parts.push({ text: `to ${service.destination}`, cls: 'detail-dest' });
+  }
+  if (service.isCancelled && service.cancelReason) {
+    parts.push({ text: service.cancelReason, cls: 'detail-bad' });
+  } else if (!service.isCancelled && service.delayReason && etdClass(service) === 'delayed') {
+    parts.push({ text: service.delayReason, cls: 'detail-warn' });
+  }
+  return parts;
+}
+
 function renderBoard(services, earlier = [], later = []) {
   boardBody.innerHTML = '';
 
@@ -278,15 +330,27 @@ function renderBoard(services, earlier = [], later = []) {
     row.classList.toggle('cancelled-row', !!s.isCancelled || !!s.notStopping);
     row.classList.toggle('earlier-row', isEarlier);
 
+    const detail = detailParts(s);
+    row.classList.toggle('has-detail', detail.length > 0);
+
     row.innerHTML = `
       <td>${s.scheduledTime}</td>
-      <td class="${etdClass(expectedLabel(s))}">${expectedLabel(s)}</td>
+      <td class="${etdClass(s)}">${expectedLabel(s)}</td>
       <td class="platform">${s.platform}</td>
       <td>${formatDuration(s)}</td>
-      <td>${s.operator || ''}</td>
     `;
 
     boardBody.appendChild(row);
+
+    if (detail.length) {
+      const detailRow = document.createElement('tr');
+      detailRow.className = 'detail-row';
+      detailRow.classList.toggle('earlier-row', isEarlier);
+      detailRow.innerHTML = `<td colspan="4">${detail
+        .map((d) => `<span class="${d.cls}">${escapeHtml(d.text)}</span>`)
+        .join(' <span class="detail-sep">·</span> ')}</td>`;
+      boardBody.appendChild(detailRow);
+    }
   });
 }
 
