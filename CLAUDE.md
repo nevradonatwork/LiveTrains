@@ -74,3 +74,27 @@ git stash -u && git fetch origin main && \
   git checkout -B claude/new-malden-waterloo-trains-2q5v0v origin/main && \
   git stash pop
 ```
+
+## LDBWS data quirks (learned from a month of snapshots, Oct 2026)
+
+- Darwin's `filterType=to` filter also admits services that only reach
+  the filter station through an onward association, e.g. Kingston-loop
+  trains advertised as terminating at Richmond (on the NEM→WAT board,
+  :19/:49, platform 4) or Teddington via Richmond (WAT→NEM, :00/:30),
+  which never call at New Malden / Waterloo as listed. The backends drop
+  any service whose `subsequentCallingPoints` (from
+  `GetDepBoardWithDetails`) don't include the destination. Services
+  outside the detail batches' coverage can't be checked and are shown
+  with their `destination` so the viewer can tell.
+- `filterLocationCancelled` = the service runs but its call at our
+  destination is cancelled → shown as "Not stopping".
+- Since early October 2026 Darwin withholds unconfirmed platforms far
+  more often (Waterloo ~90% "TBC", even New Malden ~50%); it was ~0% in
+  September with the same code. Only the "Live Departure Board - Staff"
+  product exposes the planned platform.
+- `etd` values seen: "On time", "Delayed", "Cancelled", or an HH:MM
+  time (occasionally *earlier* than `std`, styled blue as "early");
+  "No report" has never appeared. `operator` is always South Western
+  Railway, so the column was replaced by a destination/reason sub-line.
+- `nrccMessages` is absent (not an empty array) when there are no
+  station notices; when present each entry is `{ value: "<html>" }`.

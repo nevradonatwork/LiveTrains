@@ -9,7 +9,7 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="manifest" href="manifest.webmanifest" />
   <meta name="theme-color" content="#ffffff" />
-  <link rel="stylesheet" href="style.css?v=8" />
+  <link rel="stylesheet" href="style.css?v=9" />
 </head>
 <body>
   <div class="app">
@@ -44,6 +44,7 @@
 
     <p id="route-title" class="sr-only" role="status"></p>
     <div id="status" class="status"></div>
+    <div id="notices" class="notices"></div>
 
     <button id="earlier-btn" class="earlier-btn" type="button" aria-expanded="false">
       <span>Earlier trains</span>
@@ -57,7 +58,6 @@
           <th>Expected</th>
           <th>Platform</th>
           <th>Duration</th>
-          <th>Operator</th>
         </tr>
       </thead>
       <tbody id="board-body">
@@ -86,6 +86,6 @@
       dataPath: 'data/departures.json',
     };
   </script>
-  <script src="assets/board.js?v=5"></script>
+  <script src="assets/board.js?v=6"></script>
 </body>
 </html>

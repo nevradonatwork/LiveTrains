@@ -75,10 +75,55 @@ function findArrivalTime(service, destinationCrs) {
   return null;
 }
 
-function dedupeAndMap(trainServices, arrivalTimes) {
+// True when the service's known calling points include `crs` (whether or
+// not that call is cancelled). Only meaningful for services from the
+// "WithDetails" endpoints.
+function callsAt(service, crs) {
+  for (const list of service.subsequentCallingPoints || []) {
+    for (const point of list.callingPoint || []) {
+      if (point.crs === crs) return true;
+    }
+  }
+  return false;
+}
+
+// "Shepperton", or "London Waterloo via Richmond" when Darwin gives a via.
+function destinationLabel(service) {
+  const places = (service.destination || [])
+    .map((d) => (d.via ? `${d.locationName} ${d.via}` : d.locationName))
+    .filter(Boolean);
+  return places.join(' & ') || null;
+}
+
+// Station-level disruption notices (strikes, line closures, ...). Darwin
+// sends them as HTML snippets; keep just the text.
+function boardMessages(data) {
+  const seen = new Set();
+  const messages = [];
+  for (const m of data.nrccMessages || []) {
+    const raw = typeof m === 'string' ? m : (m && (m.value || m.message)) || '';
+    const text = raw
+      .replace(/<\/?(?:p|br|li|div)\b[^>]*>/gi, ' ')
+      .replace(/<[^>]+>/g, '')
+      .replace(/&amp;/g, '&')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (text && !seen.has(text)) {
+      seen.add(text);
+      messages.push(text);
+    }
+  }
+  return messages;
+}
+
+function dedupeAndMap(trainServices, arrivalTimes, skip = new Set()) {
   const seenServiceIDs = new Set();
   const uniqueServices = trainServices.filter((s) => {
     if (!s.serviceID) return true;
+    if (skip.has(s.serviceID)) return false;
     if (seenServiceIDs.has(s.serviceID)) return false;
     seenServiceIDs.add(s.serviceID);
     return true;
@@ -97,6 +142,11 @@ function dedupeAndMap(trainServices, arrivalTimes) {
       // The service runs, but its call at the filter station (our
       // destination) is cancelled - it will pass through without stopping.
       notStopping: !!s.filterLocationCancelled,
+      destination: destinationLabel(s),
+      // Darwin's free-text explanations, e.g. "This train has been
+      // cancelled because of a fault with the signalling system".
+      cancelReason: s.cancelReason || null,
+      delayReason: s.delayReason || null,
     };
   });
 }
@@ -118,6 +168,7 @@ async function fetchFromLdbws(from, to) {
   // (rather than a fixed offset, which left a gap of uncovered trains
   // on busier routes) to cover more of the 20-row departures list.
   const arrivalTimes = {};
+  const skip = new Set();
   let timeOffset = 0;
 
   for (let batch = 0; batch < 2; batch++) {
@@ -132,6 +183,15 @@ async function fetchFromLdbws(from, to) {
 
     for (const s of detailedServices) {
       if (!s.serviceID) continue;
+      // Darwin's "to" filter also admits services that only reach the
+      // destination through an onward association rather than as this
+      // service - e.g. Kingston-loop trains advertised as terminating at
+      // Richmond or Teddington, which never call at New Malden / Waterloo
+      // as listed. Their calling points give them away, so drop them.
+      if (!callsAt(s, to)) {
+        skip.add(s.serviceID);
+        continue;
+      }
       const arrivalTime = findArrivalTime(s, to);
       if (arrivalTime) arrivalTimes[s.serviceID] = arrivalTime;
     }
@@ -145,7 +205,8 @@ async function fetchFromLdbws(from, to) {
 
   return {
     generatedAt: data.generatedAt || new Date().toISOString(),
-    services: dedupeAndMap(trainServices, arrivalTimes),
+    services: dedupeAndMap(trainServices, arrivalTimes, skip),
+    messages: boardMessages(data),
   };
 }
 
@@ -197,6 +258,7 @@ async function fetchFromHuxley(from, to) {
   return {
     generatedAt: data.generatedAt || new Date().toISOString(),
     services: dedupeAndMap(trainServices, arrivalTimes),
+    messages: boardMessages(data),
   };
 }
 
@@ -220,6 +282,7 @@ async function fetchFromTransportApi(from, to) {
 
   return {
     generatedAt: new Date().toISOString(),
+    messages: [],
     services: all.map((s) => {
       const status = (s.status || '').toUpperCase();
       const isCancelled = status === 'CANCELLED';
@@ -233,6 +296,7 @@ async function fetchFromTransportApi(from, to) {
         operator: s.operator_name,
         durationMinutes: null, // TransportAPI's live board doesn't expose calling-point arrival times
         isCancelled,
+        destination: s.destination_name || null,
       };
     }),
   };
@@ -250,12 +314,13 @@ app.get('/api/departures/:from/:to', async (req, res) => {
 
   for (const provider of [fetchFromLdbws, fetchFromHuxley, fetchFromTransportApi]) {
     try {
-      const { generatedAt, services } = await provider(from, to);
+      const { generatedAt, services, messages } = await provider(from, to);
       return res.json({
         from: { crs: from, name: STATIONS[from] },
         to: { crs: to, name: STATIONS[to] },
         generatedAt,
         services,
+        messages,
       });
     } catch (err) {
       errors.push(err.message);

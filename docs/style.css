@@ -9,6 +9,7 @@
   --good: #34c759;
   --bad: #ff3b30;
   --warning: #ff9500;
+  --info: #007aff;
   --border: #efeff0;
 }
 
@@ -156,6 +157,10 @@ button {
   border-bottom: none;
 }
 
+.board td:nth-child(2) {
+  white-space: nowrap;
+}
+
 .platform {
   font-weight: 700;
   color: var(--text);
@@ -175,6 +180,62 @@ button {
 
 .no-report {
   color: var(--muted);
+}
+
+/* Expected time earlier than the schedule: re-timed, not delayed. */
+.early {
+  color: var(--info);
+}
+
+/* Second line under a train (destination, cancellation/delay reason). */
+.board tr.has-detail td {
+  border-bottom: none;
+  padding-bottom: 2px;
+}
+
+.detail-row td {
+  padding-top: 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.detail-row .detail-bad {
+  color: var(--bad);
+}
+
+.detail-row .detail-warn {
+  color: var(--warning);
+}
+
+.detail-row .detail-sep {
+  opacity: 0.6;
+}
+
+/* National Rail station notices (strikes, line closures, ...). */
+.notices {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.notice {
+  border: 1px solid #ffd98a;
+  background: #fff8e6;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.notice-text.clamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .earlier-btn {
@@ -239,11 +300,4 @@ footer {
   margin-top: 14px;
   color: var(--muted);
   font-size: 0.8rem;
-}
-
-@media (max-width: 480px) {
-  .board th:nth-child(5),
-  .board td:nth-child(5) {
-    display: none;
-  }
 }
