@@ -1,25 +1,12 @@
 {
-  "generatedAt": "2026-10-22T23:20:19.047Z",
+  "generatedAt": "2026-10-23T01:42:37.537Z",
   "routes": {
     "NEM-WAT": {
       "services": [],
       "messages": []
     },
     "WAT-NEM": {
-      "services": [
-        {
-          "scheduledTime": "23:57",
-          "expectedTime": "00:19",
-          "platform": "2",
-          "operator": "South Western Railway",
-          "durationMinutes": 22,
-          "isCancelled": false,
-          "notStopping": false,
-          "destination": "Shepperton",
-          "cancelReason": null,
-          "delayReason": "This service has been delayed by police dealing with an incident near the railway"
-        }
-      ],
+      "services": [],
       "messages": []
     },
     "NEM-RAY": {
@@ -27,32 +14,7 @@
       "messages": []
     },
     "RAY-NEM": {
-      "services": [
-        {
-          "scheduledTime": "00:16",
-          "expectedTime": "00:38",
-          "platform": "3",
-          "operator": "South Western Railway",
-          "durationMinutes": 3,
-          "isCancelled": false,
-          "notStopping": false,
-          "destination": "Shepperton",
-          "cancelReason": null,
-          "delayReason": "This service has been delayed by police dealing with an incident near the railway"
-        },
-        {
-          "scheduledTime": "00:31",
-          "expectedTime": "00:34",
-          "platform": "3",
-          "operator": "South Western Railway",
-          "durationMinutes": 3,
-          "isCancelled": false,
-          "notStopping": false,
-          "destination": "Strawberry Hill",
-          "cancelReason": null,
-          "delayReason": null
-        }
-      ],
+      "services": [],
       "messages": []
     },
     "NEM-VXH": {
@@ -60,32 +22,7 @@
       "messages": []
     },
     "VXH-NEM": {
-      "services": [
-        {
-          "scheduledTime": "00:01",
-          "expectedTime": "00:23",
-          "platform": "8",
-          "operator": "South Western Railway",
-          "durationMinutes": 18,
-          "isCancelled": false,
-          "notStopping": false,
-          "destination": "Shepperton",
-          "cancelReason": null,
-          "delayReason": "This service has been delayed by police dealing with an incident near the railway"
-        },
-        {
-          "scheduledTime": "00:16",
-          "expectedTime": "00:19",
-          "platform": "8",
-          "operator": "South Western Railway",
-          "durationMinutes": 18,
-          "isCancelled": false,
-          "notStopping": false,
-          "destination": "Strawberry Hill",
-          "cancelReason": null,
-          "delayReason": null
-        }
-      ],
+      "services": [],
       "messages": []
     }
   }
