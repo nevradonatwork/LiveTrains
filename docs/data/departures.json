@@ -1,166 +1,28 @@
 {
-  "generatedAt": "2026-10-23T23:21:03.052Z",
+  "generatedAt": "2026-10-24T01:46:28.679Z",
   "routes": {
     "NEM-WAT": {
-      "services": [
-        {
-          "scheduledTime": "00:22",
-          "expectedTime": "On time",
-          "platform": "1",
-          "operator": "South Western Railway",
-          "durationMinutes": 25,
-          "isCancelled": false,
-          "notStopping": false,
-          "destination": "London Waterloo",
-          "cancelReason": null,
-          "delayReason": null
-        }
-      ],
+      "services": [],
       "messages": []
     },
     "WAT-NEM": {
-      "services": [
-        {
-          "scheduledTime": "00:37",
-          "expectedTime": "On time",
-          "platform": "14",
-          "operator": "South Western Railway",
-          "durationMinutes": 25,
-          "isCancelled": false,
-          "notStopping": false,
-          "destination": "Woking",
-          "cancelReason": null,
-          "delayReason": null
-        },
-        {
-          "scheduledTime": "00:42",
-          "expectedTime": "On time",
-          "platform": "TBC",
-          "operator": "South Western Railway",
-          "durationMinutes": 25,
-          "isCancelled": false,
-          "notStopping": false,
-          "destination": "Strawberry Hill",
-          "cancelReason": null,
-          "delayReason": null
-        }
-      ],
+      "services": [],
       "messages": []
     },
     "NEM-RAY": {
-      "services": [
-        {
-          "scheduledTime": "00:17",
-          "expectedTime": "00:27",
-          "platform": "1",
-          "operator": "South Western Railway",
-          "durationMinutes": 3,
-          "isCancelled": false,
-          "notStopping": false,
-          "destination": "Wimbledon",
-          "cancelReason": null,
-          "delayReason": "This service has been delayed by a fault with the signalling system"
-        },
-        {
-          "scheduledTime": "00:22",
-          "expectedTime": "On time",
-          "platform": "1",
-          "operator": "South Western Railway",
-          "durationMinutes": 4,
-          "isCancelled": false,
-          "notStopping": false,
-          "destination": "London Waterloo",
-          "cancelReason": null,
-          "delayReason": null
-        }
-      ],
+      "services": [],
       "messages": []
     },
     "RAY-NEM": {
-      "services": [
-        {
-          "scheduledTime": "00:31",
-          "expectedTime": "On time",
-          "platform": "3",
-          "operator": "South Western Railway",
-          "durationMinutes": 3,
-          "isCancelled": false,
-          "notStopping": false,
-          "destination": "Shepperton",
-          "cancelReason": null,
-          "delayReason": null
-        },
-        {
-          "scheduledTime": "00:59",
-          "expectedTime": "On time",
-          "platform": "3",
-          "operator": "South Western Railway",
-          "durationMinutes": 3,
-          "isCancelled": false,
-          "notStopping": false,
-          "destination": "Woking",
-          "cancelReason": null,
-          "delayReason": null
-        },
-        {
-          "scheduledTime": "01:04",
-          "expectedTime": "On time",
-          "platform": "3",
-          "operator": "South Western Railway",
-          "durationMinutes": 3,
-          "isCancelled": false,
-          "notStopping": false,
-          "destination": "Strawberry Hill",
-          "cancelReason": null,
-          "delayReason": null
-        }
-      ],
+      "services": [],
       "messages": []
     },
     "NEM-VXH": {
-      "services": [
-        {
-          "scheduledTime": "00:22",
-          "expectedTime": "On time",
-          "platform": "1",
-          "operator": "South Western Railway",
-          "durationMinutes": 20,
-          "isCancelled": false,
-          "notStopping": false,
-          "destination": "London Waterloo",
-          "cancelReason": null,
-          "delayReason": null
-        }
-      ],
+      "services": [],
       "messages": []
     },
     "VXH-NEM": {
-      "services": [
-        {
-          "scheduledTime": "00:41",
-          "expectedTime": "On time",
-          "platform": "8",
-          "operator": "South Western Railway",
-          "durationMinutes": 21,
-          "isCancelled": false,
-          "notStopping": false,
-          "destination": "Woking",
-          "cancelReason": null,
-          "delayReason": null
-        },
-        {
-          "scheduledTime": "00:46",
-          "expectedTime": "On time",
-          "platform": "8",
-          "operator": "South Western Railway",
-          "durationMinutes": 21,
-          "isCancelled": false,
-          "notStopping": false,
-          "destination": "Strawberry Hill",
-          "cancelReason": null,
-          "delayReason": null
-        }
-      ],
+      "services": [],
       "messages": []
     }
   }
