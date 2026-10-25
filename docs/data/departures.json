@@ -1,21 +1,46 @@
 {
-  "generatedAt": "2026-10-25T00:34:59.196Z",
+  "generatedAt": "2026-10-25T05:17:40.095Z",
   "routes": {
     "NEM-WAT": {
-      "services": [],
+      "services": [
+        {
+          "scheduledTime": "07:10",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 27,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "London Waterloo",
+          "cancelReason": null,
+          "delayReason": null
+        }
+      ],
       "messages": []
     },
     "WAT-NEM": {
       "services": [
         {
-          "scheduledTime": "01:42",
+          "scheduledTime": "06:20",
           "expectedTime": "On time",
-          "platform": "11",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 20,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "Strawberry Hill",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "06:57",
+          "expectedTime": "On time",
+          "platform": "TBC",
           "operator": "South Western Railway",
           "durationMinutes": 22,
           "isCancelled": false,
           "notStopping": false,
-          "destination": "Twickenham",
+          "destination": "Hampton Court",
           "cancelReason": null,
           "delayReason": null
         }
@@ -23,20 +48,45 @@
       "messages": []
     },
     "NEM-RAY": {
-      "services": [],
+      "services": [
+        {
+          "scheduledTime": "07:10",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 3,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "London Waterloo",
+          "cancelReason": null,
+          "delayReason": null
+        }
+      ],
       "messages": []
     },
     "RAY-NEM": {
       "services": [
         {
-          "scheduledTime": "02:02",
+          "scheduledTime": "06:38",
           "expectedTime": "On time",
-          "platform": "3",
+          "platform": "TBC",
           "operator": "South Western Railway",
           "durationMinutes": 2,
           "isCancelled": false,
           "notStopping": false,
-          "destination": "Twickenham",
+          "destination": "Richmond",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "07:16",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 3,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "Hampton Court",
           "cancelReason": null,
           "delayReason": null
         }
@@ -44,20 +94,45 @@
       "messages": []
     },
     "NEM-VXH": {
-      "services": [],
+      "services": [
+        {
+          "scheduledTime": "07:10",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 22,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "London Waterloo",
+          "cancelReason": null,
+          "delayReason": null
+        }
+      ],
       "messages": []
     },
     "VXH-NEM": {
       "services": [
         {
-          "scheduledTime": "01:46",
+          "scheduledTime": "06:24",
           "expectedTime": "On time",
-          "platform": "6",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 16,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "Strawberry Hill",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "07:01",
+          "expectedTime": "On time",
+          "platform": "TBC",
           "operator": "South Western Railway",
           "durationMinutes": 18,
           "isCancelled": false,
           "notStopping": false,
-          "destination": "Twickenham",
+          "destination": "Hampton Court",
           "cancelReason": null,
           "delayReason": null
         }
