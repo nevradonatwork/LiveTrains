@@ -1,28 +1,598 @@
 {
-  "generatedAt": "2026-10-26T00:41:12.676Z",
+  "generatedAt": "2026-10-26T05:24:59.092Z",
   "routes": {
     "NEM-WAT": {
-      "services": [],
+      "services": [
+        {
+          "scheduledTime": "05:54",
+          "expectedTime": "On time",
+          "platform": "1",
+          "operator": "South Western Railway",
+          "durationMinutes": 28,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "London Waterloo",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "06:06",
+          "expectedTime": "On time",
+          "platform": "1",
+          "operator": "South Western Railway",
+          "durationMinutes": 25,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "London Waterloo",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "06:25",
+          "expectedTime": "On time",
+          "platform": "1",
+          "operator": "South Western Railway",
+          "durationMinutes": 24,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "London Waterloo",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "06:37",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 26,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "London Waterloo",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "06:40",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 27,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "London Waterloo",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "06:55",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 26,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "London Waterloo",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "07:07",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 26,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "London Waterloo",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "07:10",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 27,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "London Waterloo",
+          "cancelReason": null,
+          "delayReason": null
+        }
+      ],
       "messages": []
     },
     "WAT-NEM": {
-      "services": [],
+      "services": [
+        {
+          "scheduledTime": "05:57",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 22,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "Strawberry Hill",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "06:06",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 22,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "Hampton Court",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "06:27",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 22,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "Strawberry Hill",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "06:36",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 22,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "Hampton Court",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "06:42",
+          "expectedTime": "Cancelled",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": null,
+          "isCancelled": true,
+          "notStopping": true,
+          "destination": "Shepperton",
+          "cancelReason": "This service has been cancelled because of a shortage of train crew",
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "06:57",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 22,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "Strawberry Hill",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "07:06",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 22,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "Hampton Court",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "07:12",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 22,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "Shepperton",
+          "cancelReason": null,
+          "delayReason": null
+        }
+      ],
       "messages": []
     },
     "NEM-RAY": {
-      "services": [],
+      "services": [
+        {
+          "scheduledTime": "05:54",
+          "expectedTime": "On time",
+          "platform": "1",
+          "operator": "South Western Railway",
+          "durationMinutes": 3,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "London Waterloo",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "06:06",
+          "expectedTime": "On time",
+          "platform": "1",
+          "operator": "South Western Railway",
+          "durationMinutes": 3,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "London Waterloo",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "06:25",
+          "expectedTime": "On time",
+          "platform": "1",
+          "operator": "South Western Railway",
+          "durationMinutes": 2,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "London Waterloo",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "06:37",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 2,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "London Waterloo",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "06:40",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 3,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "London Waterloo",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "06:55",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 2,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "London Waterloo",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "07:07",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 2,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "London Waterloo",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "07:10",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 3,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "London Waterloo",
+          "cancelReason": null,
+          "delayReason": null
+        }
+      ],
       "messages": []
     },
     "RAY-NEM": {
-      "services": [],
+      "services": [
+        {
+          "scheduledTime": "05:32",
+          "expectedTime": "On time",
+          "platform": "3",
+          "operator": "South Western Railway",
+          "durationMinutes": 3,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "Shepperton",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "06:16",
+          "expectedTime": "On time",
+          "platform": "3",
+          "operator": "South Western Railway",
+          "durationMinutes": 3,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "Richmond",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "06:25",
+          "expectedTime": "On time",
+          "platform": "3",
+          "operator": "South Western Railway",
+          "durationMinutes": 3,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "Hampton Court",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "06:46",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 3,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "Richmond",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "06:55",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 3,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "Hampton Court",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "07:01",
+          "expectedTime": "Cancelled",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": null,
+          "isCancelled": true,
+          "notStopping": true,
+          "destination": "Shepperton",
+          "cancelReason": "This service has been cancelled because of a shortage of train crew",
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "07:16",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 3,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "Richmond",
+          "cancelReason": null,
+          "delayReason": null
+        }
+      ],
       "messages": []
     },
     "NEM-VXH": {
-      "services": [],
+      "services": [
+        {
+          "scheduledTime": "05:54",
+          "expectedTime": "On time",
+          "platform": "1",
+          "operator": "South Western Railway",
+          "durationMinutes": 21,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "London Waterloo",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "06:06",
+          "expectedTime": "On time",
+          "platform": "1",
+          "operator": "South Western Railway",
+          "durationMinutes": 19,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "London Waterloo",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "06:25",
+          "expectedTime": "On time",
+          "platform": "1",
+          "operator": "South Western Railway",
+          "durationMinutes": 19,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "London Waterloo",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "06:37",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 19,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "London Waterloo",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "06:40",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 20,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "London Waterloo",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "06:55",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 19,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "London Waterloo",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "07:07",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 19,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "London Waterloo",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "07:10",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 20,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "London Waterloo",
+          "cancelReason": null,
+          "delayReason": null
+        }
+      ],
       "messages": []
     },
     "VXH-NEM": {
-      "services": [],
+      "services": [
+        {
+          "scheduledTime": "06:01",
+          "expectedTime": "On time",
+          "platform": "8",
+          "operator": "South Western Railway",
+          "durationMinutes": 18,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "Strawberry Hill",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "06:10",
+          "expectedTime": "On time",
+          "platform": "8",
+          "operator": "South Western Railway",
+          "durationMinutes": 18,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "Hampton Court",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "06:31",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 18,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "Strawberry Hill",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "06:40",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 18,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "Hampton Court",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "06:46",
+          "expectedTime": "Cancelled",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": null,
+          "isCancelled": true,
+          "notStopping": true,
+          "destination": "Shepperton",
+          "cancelReason": "This service has been cancelled because of a shortage of train crew",
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "07:01",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 18,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "Strawberry Hill",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "07:10",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 18,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "Hampton Court",
+          "cancelReason": null,
+          "delayReason": null
+        },
+        {
+          "scheduledTime": "07:16",
+          "expectedTime": "On time",
+          "platform": "TBC",
+          "operator": "South Western Railway",
+          "durationMinutes": 18,
+          "isCancelled": false,
+          "notStopping": false,
+          "destination": "Shepperton",
+          "cancelReason": null,
+          "delayReason": null
+        }
+      ],
       "messages": []
     }
   }
