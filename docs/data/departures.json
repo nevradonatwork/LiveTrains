@@ -1,25 +1,12 @@
 {
-  "generatedAt": "2026-11-15T00:56:31.465Z",
+  "generatedAt": "2026-11-15T07:44:52.135Z",
   "routes": {
     "NEM-WAT": {
       "services": [],
       "messages": []
     },
     "WAT-NEM": {
-      "services": [
-        {
-          "scheduledTime": "00:42",
-          "expectedTime": "01:08",
-          "platform": "TBC",
-          "operator": "South Western Railway",
-          "durationMinutes": 25,
-          "isCancelled": false,
-          "notStopping": false,
-          "destination": "Strawberry Hill",
-          "cancelReason": null,
-          "delayReason": "This service has been delayed by a late running train being in front of this one"
-        }
-      ],
+      "services": [],
       "messages": []
     },
     "NEM-RAY": {
@@ -27,32 +14,7 @@
       "messages": []
     },
     "RAY-NEM": {
-      "services": [
-        {
-          "scheduledTime": "01:01",
-          "expectedTime": "On time",
-          "platform": "3",
-          "operator": "South Western Railway",
-          "durationMinutes": 3,
-          "isCancelled": false,
-          "notStopping": false,
-          "destination": "Woking",
-          "cancelReason": null,
-          "delayReason": null
-        },
-        {
-          "scheduledTime": "01:04",
-          "expectedTime": "01:28",
-          "platform": "3",
-          "operator": "South Western Railway",
-          "durationMinutes": 3,
-          "isCancelled": false,
-          "notStopping": false,
-          "destination": "Strawberry Hill",
-          "cancelReason": null,
-          "delayReason": "This service has been delayed by a late running train being in front of this one"
-        }
-      ],
+      "services": [],
       "messages": []
     },
     "NEM-VXH": {
@@ -60,20 +22,7 @@
       "messages": []
     },
     "VXH-NEM": {
-      "services": [
-        {
-          "scheduledTime": "00:47",
-          "expectedTime": "01:13",
-          "platform": "4",
-          "operator": "South Western Railway",
-          "durationMinutes": 20,
-          "isCancelled": false,
-          "notStopping": false,
-          "destination": "Strawberry Hill",
-          "cancelReason": null,
-          "delayReason": "This service has been delayed by a late running train being in front of this one"
-        }
-      ],
+      "services": [],
       "messages": []
     }
   }
