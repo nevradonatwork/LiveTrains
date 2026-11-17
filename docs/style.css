@@ -212,6 +212,125 @@ button {
   opacity: 0.6;
 }
 
+.board tr.tappable {
+  cursor: pointer;
+}
+
+.detail-chevron {
+  vertical-align: middle;
+  margin-left: 4px;
+  opacity: 0.7;
+  transition: transform 0.2s ease;
+}
+
+.detail-chevron.open {
+  transform: rotate(180deg);
+}
+
+/* Stops list under a tapped train. */
+.stops-row td {
+  padding: 2px 12px 10px;
+}
+
+.stops {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 4px;
+}
+
+.stop {
+  position: relative;
+  display: grid;
+  grid-template-columns: 3.4em 1fr auto;
+  gap: 8px;
+  align-items: baseline;
+  padding: 3px 0 3px 16px;
+  font-size: 0.82rem;
+  color: var(--text);
+}
+
+.stop::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1.5px solid var(--muted);
+  background: var(--card);
+  transform: translateY(-50%);
+  z-index: 1;
+}
+
+.stop::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  height: 100%;
+  width: 1.5px;
+  background: var(--card-border);
+}
+
+.stops li:last-child::after {
+  display: none;
+}
+
+.stops + .stops-further {
+  margin-top: 2px;
+}
+
+.stop-origin::before,
+.stop-dest::before {
+  background: var(--text);
+  border-color: var(--text);
+}
+
+.stop-dest .stop-name {
+  font-weight: 600;
+}
+
+.stops-further .stop {
+  color: var(--muted);
+}
+
+.stop-time {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.stop-status {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.stop-status.delayed {
+  color: var(--warning);
+}
+
+.stop-status.early {
+  color: var(--info);
+}
+
+.stop-status.cancelled {
+  color: var(--bad);
+}
+
+.stop-cancelled .stop-time,
+.stop-cancelled .stop-name {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.further-btn {
+  background: none;
+  border: none;
+  padding: 6px 0 0 20px;
+  font-size: 0.8rem;
+  color: var(--info);
+}
+
 /* National Rail station notices (strikes, line closures, ...). */
 .notices {
   display: flex;

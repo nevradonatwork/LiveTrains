@@ -87,6 +87,25 @@ function callsAt(service, crs) {
   return false;
 }
 
+// Every stop after the departure station, in order, as the board shows
+// them when a train is tapped: scheduled time, expected/actual status
+// and whether that call is cancelled. Only from the "WithDetails" endpoints.
+function flattenCallingPoints(service) {
+  const points = [];
+  for (const list of service.subsequentCallingPoints || []) {
+    for (const p of list.callingPoint || []) {
+      points.push({
+        name: p.locationName,
+        crs: p.crs,
+        st: p.st,
+        et: p.at || p.et || null,
+        isCancelled: !!p.isCancelled,
+      });
+    }
+  }
+  return points.length ? points : null;
+}
+
 // "Shepperton", or "London Waterloo via Richmond" when Darwin gives a via.
 function destinationLabel(service) {
   const places = (service.destination || [])
@@ -119,7 +138,7 @@ function boardMessages(data) {
   return messages;
 }
 
-function dedupeAndMap(trainServices, arrivalTimes, skip = new Set()) {
+function dedupeAndMap(trainServices, arrivalTimes, skip = new Set(), callingPoints = {}) {
   const seenServiceIDs = new Set();
   const uniqueServices = trainServices.filter((s) => {
     if (!s.serviceID) return true;
@@ -147,6 +166,7 @@ function dedupeAndMap(trainServices, arrivalTimes, skip = new Set()) {
       // cancelled because of a fault with the signalling system".
       cancelReason: s.cancelReason || null,
       delayReason: s.delayReason || null,
+      callingPoints: (s.serviceID && callingPoints[s.serviceID]) || null,
     };
   });
 }
@@ -169,6 +189,7 @@ async function fetchFromLdbws(from, to) {
   // on busier routes) to cover more of the 20-row departures list.
   const arrivalTimes = {};
   const skip = new Set();
+  const callingPoints = {};
   let timeOffset = 0;
 
   for (let batch = 0; batch < 2; batch++) {
@@ -194,6 +215,7 @@ async function fetchFromLdbws(from, to) {
       }
       const arrivalTime = findArrivalTime(s, to);
       if (arrivalTime) arrivalTimes[s.serviceID] = arrivalTime;
+      callingPoints[s.serviceID] = flattenCallingPoints(s);
     }
 
     if (!detailedServices.length) break;
@@ -205,7 +227,7 @@ async function fetchFromLdbws(from, to) {
 
   return {
     generatedAt: data.generatedAt || new Date().toISOString(),
-    services: dedupeAndMap(trainServices, arrivalTimes, skip),
+    services: dedupeAndMap(trainServices, arrivalTimes, skip, callingPoints),
     messages: boardMessages(data),
   };
 }
