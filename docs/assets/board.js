@@ -29,6 +29,12 @@ let laterServices = [];
 let laterExhausted = false;
 let displayedUpcoming = [];
 const LATER_MAX_OFFSET_MINUTES = 120;
+// Tapping a train opens its list of stops (origin to our destination);
+// "Show further stops" extends it to the train's final destination. Keyed
+// by time + destination so the choice survives the 60s auto-refresh.
+const openStops = new Set();
+const openFurther = new Set();
+let lastRender = { services: [], earlier: [], later: [] };
 
 const boardBody = document.getElementById('board-body');
 const routeTitle = document.getElementById('route-title');
@@ -58,7 +64,11 @@ function toMinutesOfDay(time) {
 }
 
 function etdClass(service) {
-  const label = expectedLabel(service);
+  return statusClass(expectedLabel(service), service.scheduledTime);
+}
+
+// Colour class for an expected/actual status next to a scheduled time.
+function statusClass(label, scheduledTime) {
   if (!label) return '';
   const value = label.toLowerCase();
   if (value.includes('cancel')) return 'cancelled';
@@ -73,7 +83,7 @@ function etdClass(service) {
   // train has been re-timed), which isn't a delay, so it gets its own
   // colour rather than amber.
   if (/^\d{1,2}:\d{2}$/.test(label.trim())) {
-    let diff = toMinutesOfDay(label.trim()) - toMinutesOfDay(service.scheduledTime);
+    let diff = toMinutesOfDay(label.trim()) - toMinutesOfDay(scheduledTime);
     if (diff < -12 * 60) diff += 24 * 60;
     return diff < 0 ? 'early' : 'delayed';
   }
@@ -316,7 +326,54 @@ function detailParts(service) {
   return parts;
 }
 
+function stopsKey(service) {
+  return `${service.scheduledTime}|${service.destination || ''}`;
+}
+
+function stopItem(point, extraClass = '') {
+  const status = point.isCancelled ? 'Cancelled' : point.et || '';
+  return `<li class="stop ${extraClass}${point.isCancelled ? ' stop-cancelled' : ''}">
+    <span class="stop-time">${escapeHtml(point.st || '')}</span>
+    <span class="stop-name">${escapeHtml(point.name || '')}</span>
+    <span class="stop-status ${statusClass(status, point.st)}">${escapeHtml(status)}</span>
+  </li>`;
+}
+
+// The stops list under a tapped train: the departure itself, every call
+// up to our destination, then (behind "Show further stops") the calls
+// beyond it up to the train's final destination.
+function stopsHtml(service, key) {
+  const points = service.callingPoints;
+  const destIndex = points.findIndex((p) => p.crs === to);
+  const main = destIndex >= 0 ? points.slice(0, destIndex + 1) : points;
+  const further = destIndex >= 0 ? points.slice(destIndex + 1) : [];
+  const origin = {
+    name: STATIONS[from].name,
+    st: service.scheduledTime,
+    et: service.expectedTime,
+    isCancelled: service.isCancelled,
+  };
+
+  const items = [stopItem(origin, 'stop-origin')];
+  main.forEach((p, i) => items.push(stopItem(p, i === main.length - 1 && destIndex >= 0 ? 'stop-dest' : '')));
+
+  let html = `<ul class="stops">${items.join('')}</ul>`;
+  if (further.length) {
+    const open = openFurther.has(key);
+    if (open) html += `<ul class="stops stops-further">${further.map((p) => stopItem(p)).join('')}</ul>`;
+    html += `<button type="button" class="further-btn" data-key="${escapeHtml(key)}">${open ? 'Hide further stops' : `Show further stops (${further.length})`}</button>`;
+  }
+  return html;
+}
+
+function toggleStops(key) {
+  if (openStops.has(key)) openStops.delete(key);
+  else openStops.add(key);
+  renderBoard(lastRender.services, lastRender.earlier, lastRender.later);
+}
+
 function renderBoard(services, earlier = [], later = []) {
+  lastRender = { services, earlier, later };
   boardBody.innerHTML = '';
 
   const rows = [
@@ -331,7 +388,12 @@ function renderBoard(services, earlier = [], later = []) {
     row.classList.toggle('earlier-row', isEarlier);
 
     const detail = detailParts(s);
-    row.classList.toggle('has-detail', detail.length > 0);
+    const key = stopsKey(s);
+    const hasStops = Array.isArray(s.callingPoints) && s.callingPoints.length > 0;
+    const stopsOpen = hasStops && openStops.has(key);
+    row.classList.toggle('has-detail', detail.length > 0 || stopsOpen);
+    row.classList.toggle('tappable', hasStops);
+    if (hasStops) row.addEventListener('click', () => toggleStops(key));
 
     row.innerHTML = `
       <td>${s.scheduledTime}</td>
@@ -346,10 +408,30 @@ function renderBoard(services, earlier = [], later = []) {
       const detailRow = document.createElement('tr');
       detailRow.className = 'detail-row';
       detailRow.classList.toggle('earlier-row', isEarlier);
+      detailRow.classList.toggle('has-detail', stopsOpen);
+      detailRow.classList.toggle('tappable', hasStops);
       detailRow.innerHTML = `<td colspan="4">${detail
         .map((d) => `<span class="${d.cls}">${escapeHtml(d.text)}</span>`)
-        .join(' <span class="detail-sep">·</span> ')}</td>`;
+        .join(' <span class="detail-sep">·</span> ')}${hasStops ? `<svg class="detail-chevron${stopsOpen ? ' open' : ''}" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6" /></svg>` : ''}</td>`;
+      if (hasStops) detailRow.addEventListener('click', () => toggleStops(key));
       boardBody.appendChild(detailRow);
+    }
+
+    if (stopsOpen) {
+      const stopsRow = document.createElement('tr');
+      stopsRow.className = 'stops-row';
+      stopsRow.classList.toggle('earlier-row', isEarlier);
+      stopsRow.innerHTML = `<td colspan="4">${stopsHtml(s, key)}</td>`;
+      const furtherBtn = stopsRow.querySelector('.further-btn');
+      if (furtherBtn) {
+        furtherBtn.addEventListener('click', (event) => {
+          event.stopPropagation();
+          if (openFurther.has(key)) openFurther.delete(key);
+          else openFurther.add(key);
+          renderBoard(lastRender.services, lastRender.earlier, lastRender.later);
+        });
+      }
+      boardBody.appendChild(stopsRow);
     }
   });
 }

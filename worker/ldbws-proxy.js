@@ -92,6 +92,25 @@ function callsAt(service, crs) {
   return false;
 }
 
+// Every stop after the departure station, in order, as the board shows
+// them when a train is tapped: scheduled time, expected/actual status
+// and whether that call is cancelled. Only from the "WithDetails" endpoints.
+function flattenCallingPoints(service) {
+  const points = [];
+  for (const list of service.subsequentCallingPoints || []) {
+    for (const p of list.callingPoint || []) {
+      points.push({
+        name: p.locationName,
+        crs: p.crs,
+        st: p.st,
+        et: p.at || p.et || null,
+        isCancelled: !!p.isCancelled,
+      });
+    }
+  }
+  return points.length ? points : null;
+}
+
 // "Shepperton", or "London Waterloo via Richmond" when Darwin gives a via.
 function destinationLabel(service) {
   const places = (service.destination || [])
@@ -124,7 +143,7 @@ function boardMessages(data) {
   return messages;
 }
 
-function dedupeAndMap(trainServices, arrivalTimes, skip = new Set()) {
+function dedupeAndMap(trainServices, arrivalTimes, skip = new Set(), callingPoints = {}) {
   const seenServiceIDs = new Set();
   const uniqueServices = trainServices.filter((s) => {
     if (!s.serviceID) return true;
@@ -151,6 +170,7 @@ function dedupeAndMap(trainServices, arrivalTimes, skip = new Set()) {
       // cancelled because of a fault with the signalling system".
       cancelReason: s.cancelReason || null,
       delayReason: s.delayReason || null,
+      callingPoints: (s.serviceID && callingPoints[s.serviceID]) || null,
     };
   });
 }
@@ -168,6 +188,7 @@ async function fetchFromLdbws(apiKey, from, to, { timeOffset: startOffset = 0, t
 
   const arrivalTimes = {};
   const skip = new Set();
+  const callingPoints = {};
   let timeOffset = startOffset;
 
   for (let batch = 0; batch < detailBatches; batch++) {
@@ -192,6 +213,7 @@ async function fetchFromLdbws(apiKey, from, to, { timeOffset: startOffset = 0, t
       }
       const arrivalTime = findArrivalTime(s, to);
       if (arrivalTime) arrivalTimes[s.serviceID] = arrivalTime;
+      callingPoints[s.serviceID] = flattenCallingPoints(s);
     }
 
     if (!detailedServices.length) break;
@@ -201,7 +223,7 @@ async function fetchFromLdbws(apiKey, from, to, { timeOffset: startOffset = 0, t
     timeOffset += journeyMinutes(first, last) + 1;
   }
 
-  return { services: dedupeAndMap(trainServices, arrivalTimes, skip), messages: boardMessages(data) };
+  return { services: dedupeAndMap(trainServices, arrivalTimes, skip, callingPoints), messages: boardMessages(data) };
 }
 
 async function fetchHuxleyBoard(kind, crs, filterType, filterCrs, { timeOffset = 0, timeWindow = null } = {}, attempt = 1) {

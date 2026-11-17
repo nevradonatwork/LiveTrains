@@ -98,3 +98,9 @@ git stash -u && git fetch origin main && \
   Railway, so the column was replaced by a destination/reason sub-line.
 - `nrccMessages` is absent (not an empty array) when there are no
   station notices; when present each entry is `{ value: "<html>" }`.
+- Tapping a train on the board opens its stops (from `callingPoints`,
+  flattened from `subsequentCallingPoints`). Only the Worker and the local
+  server include `callingPoints`; the Actions script leaves them out of
+  `departures.json` on purpose, since that file is committed every few
+  minutes and the lists would multiply the repo's growth. With the static
+  fallback the trains simply aren't tappable.
