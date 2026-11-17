@@ -29,11 +29,11 @@ let laterServices = [];
 let laterExhausted = false;
 let displayedUpcoming = [];
 const LATER_MAX_OFFSET_MINUTES = 120;
-// Tapping a train opens its list of stops (origin to our destination);
-// "Show further stops" extends it to the train's final destination. Keyed
-// by time + destination so the choice survives the 60s auto-refresh.
+// Tapping a train opens its full list of stops, up to the train's final
+// destination; "Hide further stops" trims it to our destination. Keyed by
+// time + destination so the choice survives the 60s auto-refresh.
 const openStops = new Set();
-const openFurther = new Set();
+const hiddenFurther = new Set();
 let lastRender = { services: [], earlier: [], later: [] };
 
 const boardBody = document.getElementById('board-body');
@@ -340,8 +340,8 @@ function stopItem(point, extraClass = '') {
 }
 
 // The stops list under a tapped train: the departure itself, every call
-// up to our destination, then (behind "Show further stops") the calls
-// beyond it up to the train's final destination.
+// up to our destination, then the calls beyond it up to the train's
+// final destination (collapsible with "Hide further stops").
 function stopsHtml(service, key) {
   const points = service.callingPoints;
   const destIndex = points.findIndex((p) => p.crs === to);
@@ -359,7 +359,7 @@ function stopsHtml(service, key) {
 
   let html = `<ul class="stops">${items.join('')}</ul>`;
   if (further.length) {
-    const open = openFurther.has(key);
+    const open = !hiddenFurther.has(key);
     if (open) html += `<ul class="stops stops-further">${further.map((p) => stopItem(p)).join('')}</ul>`;
     html += `<button type="button" class="further-btn" data-key="${escapeHtml(key)}">${open ? 'Hide further stops' : `Show further stops (${further.length})`}</button>`;
   }
@@ -426,8 +426,8 @@ function renderBoard(services, earlier = [], later = []) {
       if (furtherBtn) {
         furtherBtn.addEventListener('click', (event) => {
           event.stopPropagation();
-          if (openFurther.has(key)) openFurther.delete(key);
-          else openFurther.add(key);
+          if (hiddenFurther.has(key)) hiddenFurther.delete(key);
+          else hiddenFurther.add(key);
           renderBoard(lastRender.services, lastRender.earlier, lastRender.later);
         });
       }
