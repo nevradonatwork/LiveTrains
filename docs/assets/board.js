@@ -366,10 +366,20 @@ function stopsHtml(service, key) {
   return html;
 }
 
+// Only one train's stops are open at a time: tapping another closes the
+// first. Everything starts closed, and a direction swap or a manual
+// refresh closes it all again (the 60s auto-refresh keeps it open so a
+// list doesn't vanish while being read).
 function toggleStops(key) {
-  if (openStops.has(key)) openStops.delete(key);
-  else openStops.add(key);
+  const wasOpen = openStops.has(key);
+  openStops.clear();
+  if (!wasOpen) openStops.add(key);
   renderBoard(lastRender.services, lastRender.earlier, lastRender.later);
+}
+
+function closeAllStops() {
+  openStops.clear();
+  hiddenFurther.clear();
 }
 
 function renderBoard(services, earlier = [], later = []) {
@@ -451,6 +461,7 @@ swapBtn.addEventListener('click', () => {
   [from, to] = [to, from];
   setEarlier(false);
   resetLater();
+  closeAllStops();
   loadDepartures();
 });
 
@@ -477,7 +488,10 @@ laterBtn.addEventListener('click', async () => {
   if (failed) setStatus('Later trains are not available right now.');
 });
 
-refreshBtn.addEventListener('click', loadDepartures);
+refreshBtn.addEventListener('click', () => {
+  closeAllStops();
+  loadDepartures();
+});
 
 loadDepartures();
 scheduleAutoRefresh();
