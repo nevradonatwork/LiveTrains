@@ -309,13 +309,13 @@ function renderNotices(messages) {
   }
 }
 
-// The small second line under a train: where it's actually heading (only
-// when that isn't simply our destination, e.g. "to Shepperton" on the
-// Waterloo board), plus National Rail's reason for a cancellation or
-// delay when it gives one.
+// The small second line under a train: where it's heading ("to Shepperton"
+// on the Waterloo board, "to London Waterloo" on the New Malden one), plus
+// National Rail's reason for a cancellation or delay when it gives one.
+// It's also the tap target for the stops list, so it's always shown.
 function detailParts(service) {
   const parts = [];
-  if (service.destination && service.destination !== STATIONS[to].name) {
+  if (service.destination) {
     parts.push({ text: `to ${service.destination}`, cls: 'detail-dest' });
   }
   if (service.isCancelled && service.cancelReason) {
