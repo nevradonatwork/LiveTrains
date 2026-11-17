@@ -36,4 +36,19 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           npx wrangler deploy
-          echo "${{ secrets.CONSUMER_KEY }}" | npx wrangler secret put CONSUMER_KEY
+          # Cloudflare's GitHub-connected "Workers Builds" can upload a
+          # preview version of its own at the same moment (it runs on
+          # every branch push), which makes `secret put` refuse with
+          # "the latest version of your Worker isn't currently deployed"
+          # even right after a deploy. Redeploy and retry a few times
+          # before giving up.
+          for attempt in 1 2 3 4; do
+            if echo "${{ secrets.CONSUMER_KEY }}" | npx wrangler secret put CONSUMER_KEY; then
+              exit 0
+            fi
+            echo "secret put refused (attempt $attempt); redeploying and retrying in 20s"
+            sleep 20
+            npx wrangler deploy
+          done
+          echo "secret put kept failing after 4 attempts"
+          exit 1
