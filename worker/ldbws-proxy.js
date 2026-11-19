@@ -95,9 +95,9 @@ function callsAt(service, crs) {
 // Every stop after the departure station, in order, as the board shows
 // them when a train is tapped: scheduled time, expected/actual status
 // and whether that call is cancelled. Only from the "WithDetails" endpoints.
-function flattenCallingPoints(service) {
+function flattenCallingPoints(service, which = 'subsequentCallingPoints') {
   const points = [];
-  for (const list of service.subsequentCallingPoints || []) {
+  for (const list of service[which] || []) {
     for (const p of list.callingPoint || []) {
       points.push({
         name: p.locationName,
@@ -143,7 +143,7 @@ function boardMessages(data) {
   return messages;
 }
 
-function dedupeAndMap(trainServices, arrivalTimes, skip = new Set(), callingPoints = {}) {
+function dedupeAndMap(trainServices, arrivalTimes, skip = new Set(), callingPoints = {}, previousStops = {}) {
   const seenServiceIDs = new Set();
   const uniqueServices = trainServices.filter((s) => {
     if (!s.serviceID) return true;
@@ -171,6 +171,8 @@ function dedupeAndMap(trainServices, arrivalTimes, skip = new Set(), callingPoin
       cancelReason: s.cancelReason || null,
       delayReason: s.delayReason || null,
       callingPoints: (s.serviceID && callingPoints[s.serviceID]) || null,
+      // Where the train came from before this station, oldest first.
+      previousStops: (s.serviceID && previousStops[s.serviceID]) || null,
     };
   });
 }
@@ -189,6 +191,7 @@ async function fetchFromLdbws(apiKey, from, to, { timeOffset: startOffset = 0, t
   const arrivalTimes = {};
   const skip = new Set();
   const callingPoints = {};
+  const previousStops = {};
   let timeOffset = startOffset;
 
   for (let batch = 0; batch < detailBatches; batch++) {
@@ -214,6 +217,7 @@ async function fetchFromLdbws(apiKey, from, to, { timeOffset: startOffset = 0, t
       const arrivalTime = findArrivalTime(s, to);
       if (arrivalTime) arrivalTimes[s.serviceID] = arrivalTime;
       callingPoints[s.serviceID] = flattenCallingPoints(s);
+      previousStops[s.serviceID] = flattenCallingPoints(s, 'previousCallingPoints');
     }
 
     if (!detailedServices.length) break;
@@ -223,7 +227,7 @@ async function fetchFromLdbws(apiKey, from, to, { timeOffset: startOffset = 0, t
     timeOffset += journeyMinutes(first, last) + 1;
   }
 
-  return { services: dedupeAndMap(trainServices, arrivalTimes, skip, callingPoints), messages: boardMessages(data) };
+  return { services: dedupeAndMap(trainServices, arrivalTimes, skip, callingPoints, previousStops), messages: boardMessages(data) };
 }
 
 async function fetchHuxleyBoard(kind, crs, filterType, filterCrs, { timeOffset = 0, timeWindow = null } = {}, attempt = 1) {

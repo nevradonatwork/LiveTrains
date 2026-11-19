@@ -90,9 +90,9 @@ function callsAt(service, crs) {
 // Every stop after the departure station, in order, as the board shows
 // them when a train is tapped: scheduled time, expected/actual status
 // and whether that call is cancelled. Only from the "WithDetails" endpoints.
-function flattenCallingPoints(service) {
+function flattenCallingPoints(service, which = 'subsequentCallingPoints') {
   const points = [];
-  for (const list of service.subsequentCallingPoints || []) {
+  for (const list of service[which] || []) {
     for (const p of list.callingPoint || []) {
       points.push({
         name: p.locationName,
@@ -138,7 +138,7 @@ function boardMessages(data) {
   return messages;
 }
 
-function dedupeAndMap(trainServices, arrivalTimes, skip = new Set(), callingPoints = {}) {
+function dedupeAndMap(trainServices, arrivalTimes, skip = new Set(), callingPoints = {}, previousStops = {}) {
   const seenServiceIDs = new Set();
   const uniqueServices = trainServices.filter((s) => {
     if (!s.serviceID) return true;
@@ -167,6 +167,8 @@ function dedupeAndMap(trainServices, arrivalTimes, skip = new Set(), callingPoin
       cancelReason: s.cancelReason || null,
       delayReason: s.delayReason || null,
       callingPoints: (s.serviceID && callingPoints[s.serviceID]) || null,
+      // Where the train came from before this station, oldest first.
+      previousStops: (s.serviceID && previousStops[s.serviceID]) || null,
     };
   });
 }
@@ -190,6 +192,7 @@ async function fetchFromLdbws(from, to) {
   const arrivalTimes = {};
   const skip = new Set();
   const callingPoints = {};
+  const previousStops = {};
   let timeOffset = 0;
 
   for (let batch = 0; batch < 2; batch++) {
@@ -216,6 +219,7 @@ async function fetchFromLdbws(from, to) {
       const arrivalTime = findArrivalTime(s, to);
       if (arrivalTime) arrivalTimes[s.serviceID] = arrivalTime;
       callingPoints[s.serviceID] = flattenCallingPoints(s);
+      previousStops[s.serviceID] = flattenCallingPoints(s, 'previousCallingPoints');
     }
 
     if (!detailedServices.length) break;
@@ -227,7 +231,7 @@ async function fetchFromLdbws(from, to) {
 
   return {
     generatedAt: data.generatedAt || new Date().toISOString(),
-    services: dedupeAndMap(trainServices, arrivalTimes, skip, callingPoints),
+    services: dedupeAndMap(trainServices, arrivalTimes, skip, callingPoints, previousStops),
     messages: boardMessages(data),
   };
 }
