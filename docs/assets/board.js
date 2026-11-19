@@ -34,6 +34,7 @@ const LATER_MAX_OFFSET_MINUTES = 120;
 // by time + destination so the choice survives the 60s auto-refresh.
 const openStops = new Set();
 const openFurther = new Set();
+const openPrevious = new Set();
 let lastRender = { services: [], earlier: [], later: [] };
 
 const boardBody = document.getElementById('board-body');
@@ -85,6 +86,7 @@ function statusClass(label, scheduledTime) {
   if (/^\d{1,2}:\d{2}$/.test(label.trim())) {
     let diff = toMinutesOfDay(label.trim()) - toMinutesOfDay(scheduledTime);
     if (diff < -12 * 60) diff += 24 * 60;
+    if (diff === 0) return '';
     return diff < 0 ? 'early' : 'delayed';
   }
   return '';
@@ -339,9 +341,10 @@ function stopItem(point, extraClass = '') {
   </li>`;
 }
 
-// The stops list under a tapped train: the departure itself, every call
-// up to our destination, then (behind "Show further stops") the calls
-// beyond it up to the train's final destination.
+// The stops list under a tapped train: (behind "Show previous stops") where
+// the train came from, then the departure itself, every call up to our
+// destination, then (behind "Show further stops") the calls beyond it up
+// to the train's final destination.
 function stopsHtml(service, key) {
   const points = service.callingPoints;
   const destIndex = points.findIndex((p) => p.crs === to);
@@ -357,11 +360,19 @@ function stopsHtml(service, key) {
   const items = [stopItem(origin, 'stop-origin')];
   main.forEach((p, i) => items.push(stopItem(p, i === main.length - 1 && destIndex >= 0 ? 'stop-dest' : '')));
 
-  let html = `<ul class="stops">${items.join('')}</ul>`;
+  const previous = service.previousStops || [];
+  const furtherOpen = further.length > 0 && openFurther.has(key);
+  const previousOpen = previous.length > 0 && openPrevious.has(key);
+
+  let html = '';
+  if (previous.length) {
+    html += `<button type="button" class="further-btn previous-btn" data-key="${escapeHtml(key)}">${previousOpen ? 'Hide previous stops' : `Show previous stops (${previous.length})`}</button>`;
+    if (previousOpen) html += `<ul class="stops stops-previous stops-continues">${previous.map((p) => stopItem(p)).join('')}</ul>`;
+  }
+  html += `<ul class="stops${furtherOpen ? ' stops-continues' : ''}">${items.join('')}</ul>`;
   if (further.length) {
-    const open = openFurther.has(key);
-    if (open) html += `<ul class="stops stops-further">${further.map((p) => stopItem(p)).join('')}</ul>`;
-    html += `<button type="button" class="further-btn" data-key="${escapeHtml(key)}">${open ? 'Hide further stops' : `Show further stops (${further.length})`}</button>`;
+    if (furtherOpen) html += `<ul class="stops stops-further">${further.map((p) => stopItem(p)).join('')}</ul>`;
+    html += `<button type="button" class="further-btn" data-key="${escapeHtml(key)}">${furtherOpen ? 'Hide further stops' : `Show further stops (${further.length})`}</button>`;
   }
   return html;
 }
@@ -380,6 +391,7 @@ function toggleStops(key) {
 function closeAllStops() {
   openStops.clear();
   openFurther.clear();
+  openPrevious.clear();
 }
 
 function renderBoard(services, earlier = [], later = []) {
@@ -432,15 +444,16 @@ function renderBoard(services, earlier = [], later = []) {
       stopsRow.className = 'stops-row';
       stopsRow.classList.toggle('earlier-row', isEarlier);
       stopsRow.innerHTML = `<td colspan="4">${stopsHtml(s, key)}</td>`;
-      const furtherBtn = stopsRow.querySelector('.further-btn');
-      if (furtherBtn) {
-        furtherBtn.addEventListener('click', (event) => {
-          event.stopPropagation();
-          if (openFurther.has(key)) openFurther.delete(key);
-          else openFurther.add(key);
-          renderBoard(lastRender.services, lastRender.earlier, lastRender.later);
-        });
-      }
+      const toggleSet = (set) => (event) => {
+        event.stopPropagation();
+        if (set.has(key)) set.delete(key);
+        else set.add(key);
+        renderBoard(lastRender.services, lastRender.earlier, lastRender.later);
+      };
+      const previousBtn = stopsRow.querySelector('.previous-btn');
+      if (previousBtn) previousBtn.addEventListener('click', toggleSet(openPrevious));
+      const furtherBtn = stopsRow.querySelector('.further-btn:not(.previous-btn)');
+      if (furtherBtn) furtherBtn.addEventListener('click', toggleSet(openFurther));
       boardBody.appendChild(stopsRow);
     }
   });

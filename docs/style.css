@@ -277,6 +277,19 @@ button {
   display: none;
 }
 
+/* A list followed by another keeps its line running into it. */
+.stops-continues li:last-child::after {
+  display: block;
+}
+
+.stops-previous .stop {
+  color: var(--muted);
+}
+
+.previous-btn {
+  padding: 0 0 6px 20px;
+}
+
 .stops + .stops-further {
   margin-top: 2px;
 }
